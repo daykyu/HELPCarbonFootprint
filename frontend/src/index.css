@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.placeholder-image {
+  @apply border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 relative;
+}
+
+.placeholder-image::before,
+.placeholder-image::after {
+  content: '';
+  @apply absolute ;
+  width: 2px;
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.placeholder-image::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
