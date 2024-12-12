@@ -47,7 +47,7 @@ const Register = () => {
 
   return (
     <div className="flex min-h-screen bg-blue-50" data-testid="register-page">
-      {/* Sidebar sudah include dalam Layout */}
+      {/* Sidebar included in the layout */}
       
         <div className="flex-1 p-8 ">
           <div className="bg-white rounded-lg shadow-sm p-6 max-w-3xl mx-auto">
@@ -155,23 +155,7 @@ const Register = () => {
                 </div>
 
                 
-          <div>
-            <label htmlFor="reminderFrequency" className="block text-sm font-medium text-gray-700 mb-1">
-              Reminder Frequency*
-            </label>
-            <select
-              id="reminderFrequency"
-              required
-              data-testid="activity-reminder-select"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={formData.reminderFrequency}
-              onChange={(e) => setFormData({...formData, reminderFrequency: e.target.value})}
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
+          
 
             
               </div>
