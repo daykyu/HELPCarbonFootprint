@@ -81,7 +81,7 @@ const Register = () => {
 
                 <div className="col-span-2 md:col-span-1">
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Email*
+                    Email*
                   </label>
                   <input
                     type="email"
