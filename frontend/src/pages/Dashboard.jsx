@@ -228,7 +228,7 @@ const Dashboard = () => {
         {/* Today's Carbon Footprint */}
         <div className="bg-white rounded-lg shadow p-6" data-testid="daily-footprint-card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Today's Carbon Footprint
+            Today's Carbon Footprint 
           </h3>
           <div className="flex items-center justify-between">
             <div className="flex-1">
