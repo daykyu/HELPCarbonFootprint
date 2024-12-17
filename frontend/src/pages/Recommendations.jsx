@@ -132,6 +132,7 @@ const Recommendations = () => {
     }
   };
 
+  // To able generate insights for activities
   const generateInsights = (activities) => {
     if (!activities.length) return {};
 
