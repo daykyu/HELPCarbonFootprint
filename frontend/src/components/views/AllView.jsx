@@ -48,23 +48,7 @@ const AllView = ({ footprintData }) => {
     <div className="space-y-6" data-testid="all-view-container">
       {/* Impact Summary with Legend */}
       <div className="bg-white p-6 rounded-lg shadow" data-testid="impact-summary">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900">Impact Summary</h4>
-          <div className="flex gap-4">
-            <div className="flex items-center gap-2" data-testid="impact-legend-high">
-              <div className="w-2 h-2 rounded-full bg-red-500"></div>
-              <span className="text-xs text-gray-600">High: ≥40%</span>
-            </div>
-            <div className="flex items-center gap-2" data-testid="impact-legend-medium">
-              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-              <span className="text-xs text-gray-600">Medium: 25-39%</span>
-            </div>
-            <div className="flex items-center gap-2" data-testid="impact-legend-low">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span className="text-xs text-gray-600">Low: &lt;25%</span>
-            </div>
-          </div>
-        </div>
+       
         
         <div className="space-y-4">
           {sortedBreakdown.map(({ category, data, impact }) => (
