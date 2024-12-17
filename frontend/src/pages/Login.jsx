@@ -14,10 +14,7 @@ const Login = () => {
 
   useEffect(() => {
     // Jika user sudah login, redirect ke daily-log
-    if (localStorage.getItem('token')) {
-      navigate('/daily-log');
-      return;
-    }
+  
 
     // Check temporary credentials dari registrasi
     const tempCredentials = sessionStorage.getItem('tempCredentials');

@@ -119,6 +119,17 @@ const Dashboard = () => {
     return value < 0.01 ? '< 0.01' : value.toFixed(2);
   };
 
+  const isToday = (date) => {
+    const today = new Date();
+    const compareDate = new Date(date);
+    return today.getDate() === compareDate.getDate() &&
+           today.getMonth() === compareDate.getMonth() &&
+           today.getFullYear() === compareDate.getFullYear();
+  };
+
+  const showInsufficientDataWarning = !footprintData.projected.annual || 
+    (metadata.lastUpdate && !isToday(metadata.lastUpdate));
+
   const renderTabContent = () => {
     const todayData = historicalData[0] || {};
 
@@ -157,8 +168,6 @@ const Dashboard = () => {
     );
   }
 
-  const showInsufficientDataWarning = !footprintData.projected.annual;
-
   return (
     <div className="p-6" data-testid="dashboard-container">
       {/* Warning Banner */}
@@ -166,9 +175,14 @@ const Dashboard = () => {
         <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4 flex justify-between items-center" 
              data-testid="insufficient-data-warning">
           <div className="flex items-center">
-            <span className="text-orange-800">Insufficient Data</span>
+            <span className="text-orange-800">
+              {!footprintData.projected.annual ? 'Insufficient Data' : 'Daily Update Required'}
+            </span>
             <span className="ml-2 text-sm text-orange-700">
-              Please update your activity log to see accurate carbon footprint calculations
+              {!footprintData.projected.annual 
+                ? 'Please update your activity log to see accurate carbon footprint calculations'
+                : 'Please update your activity log for today to maintain accurate tracking'
+              }
             </span>
           </div>
           <button
@@ -308,109 +322,109 @@ const Dashboard = () => {
         </div>
       </div>
 
-{/* Tips Section */}
-<div className="mt-6 bg-white rounded-lg shadow p-6">
-  <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Impact Analysis & Tips</h3>
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="tips-section">
-    {[
-      {
-        category: 'Energy',
-        getContent: (data) => ({
-          status: data.breakdown.energy.percentage >= 40 ? 'Critical Attention Needed' :
-                  data.breakdown.energy.percentage >= 25 ? 'Needs Improvement' : 'Well Managed',
-          impact: `${data.breakdown.energy.percentage}% of total emissions (${formatValue(data.breakdown.energy.daily)} ${data.current.unit}/day)`,
-          tip: data.breakdown.energy.percentage >= 40 
-            ? 'Your energy consumption is significantly high. Immediate actions recommended:\n' +
-              '• Switch to energy-efficient appliances\n' +
-              '• Implement timer switches for non-essential devices\n' +
-              '• Consider solar panel installation\n' +
-              '• Conduct an energy audit'
-            : data.breakdown.energy.percentage >= 25
-            ? 'Your energy usage could be optimized:\n' +
-              '• Regular maintenance of appliances\n' +
-              '• Use natural lighting when possible\n' +
-              '• Set optimal temperature controls'
-            : 'Keep maintaining good practices:\n' +
-              '• Continue monitoring usage patterns\n' +
-              '• Look for additional optimization opportunities'
-        })
-      },
-      {
-        category: 'Transportation',
-        getContent: (data) => ({
-          status: data.breakdown.transportation.percentage >= 40 ? 'Critical Attention Needed' :
-                  data.breakdown.transportation.percentage >= 25 ? 'Needs Improvement' : 'Well Managed',
-          impact: `${data.breakdown.transportation.percentage}% of total emissions (${formatValue(data.breakdown.transportation.daily)} ${data.current.unit}/day)`,
-          tip: data.breakdown.transportation.percentage >= 40
-            ? 'Your transportation emissions are high. Consider:\n' +
-              '• Switch to public transportation\n' +
-              '• Implement carpooling\n' +
-              '• Consider electric/hybrid vehicles\n' +
-              '• Optimize travel routes'
-            : data.breakdown.transportation.percentage >= 25
-            ? 'Room for improvement in transportation:\n' +
-              '• Combine trips when possible\n' +
-              '• Regular vehicle maintenance\n' +
-              '• Use bike for short distances'
-            : 'Continue your eco-friendly transit:\n' +
-              '• Maintain current practices\n' +
-              '• Consider zero-emission options'
-        })
-      },
-      {
-        category: 'Dietary',
-        getContent: (data) => ({
-          status: data.breakdown.dietary.percentage >= 40 ? 'Critical Attention Needed' :
-                  data.breakdown.dietary.percentage >= 25 ? 'Needs Improvement' : 'Well Managed',
-          impact: `${data.breakdown.dietary.percentage}% of total emissions (${formatValue(data.breakdown.dietary.daily)} ${data.current.unit}/day)`,
-          tip: data.breakdown.dietary.percentage >= 40
-            ? 'Your dietary choices have high impact. Consider:\n' +
-              '• Reduce meat consumption frequency\n' +
-              '• Choose local and seasonal produce\n' +
-              '• Plan meals to minimize waste\n' +
-              '• Incorporate more plant-based options'
-            : data.breakdown.dietary.percentage >= 25
-            ? 'Some room for dietary improvements:\n' +
-              '• Balance meat and plant-based meals\n' +
-              '• Choose sustainable seafood options\n' +
-              '• Minimize processed foods'
-            : 'Maintain your sustainable diet:\n' +
-              '• Continue current dietary choices\n' +
-              '• Explore more local food options'
-        })
-      }
-    ].map((category) => {
-      const content = category.getContent(footprintData);
-      const impactLevel = 
-        footprintData.breakdown[category.category.toLowerCase()].percentage >= 40 ? 'bg-red-50 border-red-200' :
-        footprintData.breakdown[category.category.toLowerCase()].percentage >= 25 ? 'bg-yellow-50 border-yellow-200' :
-        'bg-green-50 border-green-200';
+      {/* Tips Section */}
+      <div className="mt-6 bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Impact Analysis & Tips</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-testid="tips-section">
+          {[
+            {
+              category: 'Energy',
+              getContent: (data) => ({
+                status: data.breakdown.energy.percentage >= 40 ? 'Critical Attention Needed' :
+                        data.breakdown.energy.percentage >= 25 ? 'Needs Improvement' : 'Well Managed',
+                impact: `${data.breakdown.energy.percentage}% of total emissions (${formatValue(data.breakdown.energy.daily)} ${data.current.unit}/day)`,
+                tip: data.breakdown.energy.percentage >= 40 
+                  ? 'Your energy consumption is significantly high. Immediate actions recommended:\n' +
+                    '• Switch to energy-efficient appliances\n' +
+                    '• Implement timer switches for non-essential devices\n' +
+                    '• Consider solar panel installation\n' +
+                    '• Conduct an energy audit'
+                  : data.breakdown.energy.percentage >= 25
+                  ? 'Your energy usage could be optimized:\n' +
+                    '• Regular maintenance of appliances\n' +
+                    '• Use natural lighting when possible\n' +
+                    '• Set optimal temperature controls'
+                  : 'Keep maintaining good practices:\n' +
+                    '• Continue monitoring usage patterns\n' +
+                    '• Look for additional optimization opportunities'
+              })
+            },
+            {
+              category: 'Transportation',
+              getContent: (data) => ({
+                status: data.breakdown.transportation.percentage >= 40 ? 'Critical Attention Needed' :
+                        data.breakdown.transportation.percentage >= 25 ? 'Needs Improvement' : 'Well Managed',
+                impact: `${data.breakdown.transportation.percentage}% of total emissions (${formatValue(data.breakdown.transportation.daily)} ${data.current.unit}/day)`,
+                tip: data.breakdown.transportation.percentage >= 40
+                  ? 'Your transportation emissions are high. Consider:\n' +
+                    '• Switch to public transportation\n' +
+                    '• Implement carpooling\n' +
+                    '• Consider electric/hybrid vehicles\n' +
+                    '• Optimize travel routes'
+                  : data.breakdown.transportation.percentage >= 25
+                  ? 'Room for improvement in transportation:\n' +
+                    '• Combine trips when possible\n' +
+                    '• Regular vehicle maintenance\n' +
+                    '• Use bike for short distances'
+                  : 'Continue your eco-friendly transit:\n' +
+                    '• Maintain current practices\n' +
+                    '• Consider zero-emission options'
+              })
+            },
+            {
+              category: 'Dietary',
+              getContent: (data) => ({
+                status: data.breakdown.dietary.percentage >= 40 ? 'Critical Attention Needed' :
+                        data.breakdown.dietary.percentage >= 25 ? 'Needs Improvement' : 'Well Managed',
+                impact: `${data.breakdown.dietary.percentage}% of total emissions (${formatValue(data.breakdown.dietary.daily)} ${data.current.unit}/day)`,
+                tip: data.breakdown.dietary.percentage >= 40
+                  ? 'Your dietary choices have high impact. Consider:\n' +
+                    '• Reduce meat consumption frequency\n' +
+                    '• Choose local and seasonal produce\n' +
+                    '• Plan meals to minimize waste\n' +
+                    '• Incorporate more plant-based options'
+                  : data.breakdown.dietary.percentage >= 25
+                  ? 'Some room for dietary improvements:\n' +
+                    '• Balance meat and plant-based meals\n' +
+                    '• Choose sustainable seafood options\n' +
+                    '• Minimize processed foods'
+                  : 'Maintain your sustainable diet:\n' +
+                    '• Continue current dietary choices\n' +
+                    '• Explore more local food options'
+              })
+            }
+          ].map((category) => {
+            const content = category.getContent(footprintData);
+            const impactLevel = 
+              footprintData.breakdown[category.category.toLowerCase()].percentage >= 40 ? 'bg-red-50 border-red-200' :
+              footprintData.breakdown[category.category.toLowerCase()].percentage >= 25 ? 'bg-yellow-50 border-yellow-200' :
+              'bg-green-50 border-green-200';
 
-      return (
-        <div 
-          key={category.category}
-          className={`p-4 rounded-lg border ${impactLevel}`}
-          data-testid={`tip-${category.category.toLowerCase()}`}
-        >
-          <h4 className="font-medium text-gray-900 mb-2">
-            {category.category}
-            <span className={`ml-2 text-sm ${
-              footprintData.breakdown[category.category.toLowerCase()].percentage >= 40 ? 'text-red-600' :
-              footprintData.breakdown[category.category.toLowerCase()].percentage >= 25 ? 'text-yellow-600' :
-              'text-green-600'
-            }`}>
-              ({content.status})
-            </span>
-          </h4>
-          <p className="text-sm text-gray-600 mb-2">{content.impact}</p>
-          <div className="text-sm text-gray-700 whitespace-pre-line">
-            {content.tip}
-          </div>
+            return (
+              <div 
+                key={category.category}
+                className={`p-4 rounded-lg border ${impactLevel}`}
+                data-testid={`tip-${category.category.toLowerCase()}`}
+              >
+                <h4 className="font-medium text-gray-900 mb-2">
+                  {category.category}
+                  <span className={`ml-2 text-sm ${
+                    footprintData.breakdown[category.category.toLowerCase()].percentage >= 40 ? 'text-red-600' :
+                    footprintData.breakdown[category.category.toLowerCase()].percentage >= 25 ? 'text-yellow-600' :
+                    'text-green-600'
+                  }`}>
+                    ({content.status})
+                  </span>
+                </h4>
+                <p className="text-sm text-gray-600 mb-2">{content.impact}</p>
+                <div className="text-sm text-gray-700 whitespace-pre-line">
+                  {content.tip}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      );
-    })}
-  </div>
-</div>
+      </div>
 
       {/* Last Update Info */}
       {metadata.lastUpdate && (
@@ -418,7 +432,7 @@ const Dashboard = () => {
           Last data update: {new Date(metadata.lastUpdate).toLocaleString()}
         </div>
       )}
-       <div className="text-center mt-8 text-sm text-gray-500">
+      <div className="text-center mt-8 text-sm text-gray-500">
         Copyright © 2024 | All Rights Reserved<br />
         Developed by HELP University x STIKOM Students for BIT216 - Software Engineering Principles
       </div>
@@ -427,3 +441,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+                  
+

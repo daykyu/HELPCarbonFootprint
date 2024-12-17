@@ -44,6 +44,8 @@ function App() {
           isRegistered ? 
             <Navigate to="/daily-log" replace /> :
             <Navigate to="/register" replace />
+            
+            
         }
       />
     </Routes>
