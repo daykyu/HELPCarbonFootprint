@@ -80,40 +80,7 @@ const DietaryView = ({ data, todayData }) => {
         </div>
       </div>
 
-      {/* Today's Details */}
-      <div className="bg-white rounded-lg shadow p-6" data-testid="dietary-today">
-        <h4 className="text-lg font-medium text-gray-900 mb-4">Today's Dietary Impact</h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 p-3 rounded-lg" data-testid="dietary-type">
-            <p className="text-sm text-gray-600">Diet Type</p>
-            <p className="font-medium capitalize">
-              {(todayData.dietary?.type || 'Not recorded').replace('_', ' ')}
-            </p>
-          </div>
-          <div className="bg-blue-50 p-3 rounded-lg" data-testid="dietary-emissions">
-            <p className="text-sm text-gray-600">Emissions</p>
-            <p className="font-medium">
-              {todayEmissions.toFixed(2)} kg CO2e
-            </p>
-          </div>
-          <div 
-            className={`p-3 rounded-lg ${impactLevel.color}`}
-            data-testid="dietary-impact-level"
-            data-impact={impactLevel.testId}
-          >
-            <p className="text-sm text-gray-600">Impact Level</p>
-            <p className={`font-medium ${impactLevel.textClass}`}>
-              {impactLevel.level}
-            </p>
-          </div>
-          <div className="bg-blue-50 p-3 rounded-lg" data-testid="dietary-relative">
-            <p className="text-sm text-gray-600">Relative to Average</p>
-            <p className="font-medium">
-              {relativeToAverage}%
-            </p>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
