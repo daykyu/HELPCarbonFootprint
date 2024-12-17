@@ -14,7 +14,7 @@ const Login = () => {
 
   useEffect(() => {
 
-<p>The final version of the Login pages</p>
+<p>The final version of the Login pagess</p>
 
 
     // Check temporary credentials dari registrasi
