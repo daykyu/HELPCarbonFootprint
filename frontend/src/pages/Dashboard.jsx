@@ -290,7 +290,7 @@ const Dashboard = () => {
             />
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Malaysia's 2030 target: 45% reduction from current average
+            Malaysia's 2030 target is 45% reduction from current average
           </p>
         </div>
       </div>
