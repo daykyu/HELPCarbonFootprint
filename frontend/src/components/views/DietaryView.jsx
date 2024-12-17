@@ -80,65 +80,43 @@ const DietaryView = ({ data, todayData }) => {
         </div>
       </div>
 
-      
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Emissions History */}
-        <div className="bg-white rounded-lg shadow p-6" data-testid="dietary-history-chart">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">
-            Emissions History
-          </h4>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value) => `${value.toFixed(2)} kg CO2e`}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="emissions" 
-                  stroke="#3B82F6" 
-                  name="CO2 Emissions" 
-                />
-              </LineChart>
-            </ResponsiveContainer>
+      {/* Today's Details */}
+      <div className="bg-white rounded-lg shadow p-6" data-testid="dietary-today">
+        <h4 className="text-lg font-medium text-gray-900 mb-4">Today's Dietary Impact</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-blue-50 p-3 rounded-lg" data-testid="dietary-type">
+            <p className="text-sm text-gray-600">Diet Type</p>
+            <p className="font-medium capitalize">
+              {(todayData.dietary?.type || 'Not recorded').replace('_', ' ')}
+            </p>
           </div>
-        </div>
-
-        {/* Diet Type Distribution */}
-        <div className="bg-white rounded-lg shadow p-6" data-testid="dietary-distribution-chart">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">
-            Diet Type Distribution
-          </h4>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percentage }) => `${name} (${percentage}%)`}
-                >
-                  {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${value} days`} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="bg-blue-50 p-3 rounded-lg" data-testid="dietary-emissions">
+            <p className="text-sm text-gray-600">Emissions</p>
+            <p className="font-medium">
+              {todayEmissions.toFixed(2)} kg CO2e
+            </p>
+          </div>
+          <div 
+            className={`p-3 rounded-lg ${impactLevel.color}`}
+            data-testid="dietary-impact-level"
+            data-impact={impactLevel.testId}
+          >
+            <p className="text-sm text-gray-600">Impact Level</p>
+            <p className={`font-medium ${impactLevel.textClass}`}>
+              {impactLevel.level}
+            </p>
+          </div>
+          <div className="bg-blue-50 p-3 rounded-lg" data-testid="dietary-relative">
+            <p className="text-sm text-gray-600">Relative to Average</p>
+            <p className="font-medium">
+              {relativeToAverage}%
+            </p>
           </div>
         </div>
       </div>
+
+      {/* Charts */}
+      
     </div>
   );
 };
