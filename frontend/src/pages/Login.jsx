@@ -13,8 +13,9 @@ const Login = () => {
   const [message, setMessage] = useState({ type: '', content: '' });
 
   useEffect(() => {
-    // Jika user sudah login, redirect ke daily-log
-  
+
+<p>The final version of the Login page</p>
+
 
     // Check temporary credentials dari registrasi
     const tempCredentials = sessionStorage.getItem('tempCredentials');

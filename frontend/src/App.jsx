@@ -29,6 +29,7 @@ function App() {
           </PrivateRoute>
         }
       >
+        <Route path="login" element={<Profile />} /> 
         <Route path="profile" element={<Profile />} />
         <Route path="daily-log" element={<DailyActivityLog />} />
         <Route path="dashboard" element={<Dashboard />} />

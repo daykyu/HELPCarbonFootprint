@@ -67,7 +67,7 @@ const Profile = () => {
        }
        setIsLoading(false);
      } catch (error) {
-       console.error('Error fetching profile:', error);
+       console.error('Error to fetch profile:', error);
        setMessage({
          type: 'error',
          content: 'Failed to fetch profile data. ' + (error.response?.data?.message || '')
