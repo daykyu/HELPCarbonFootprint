@@ -116,7 +116,62 @@ const DietaryView = ({ data, todayData }) => {
       </div>
 
       {/* Charts */}
-      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Emissions History */}
+        <div className="bg-white rounded-lg shadow p-6" data-testid="dietary-history-chart">
+          <h4 className="text-lg font-medium text-gray-900 mb-4">
+            Emissions History
+          </h4>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={historyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => `${value.toFixed(2)} kg CO2e`}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="emissions" 
+                  stroke="#3B82F6" 
+                  name="CO2 Emissions" 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Diet Type Distribution */}
+        <div className="bg-white rounded-lg shadow p-6" data-testid="dietary-distribution-chart">
+          <h4 className="text-lg font-medium text-gray-900 mb-4">
+            Diet Type Distribution
+          </h4>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                  label={({ name, percentage }) => `${name} (${percentage}%)`}
+                >
+                  {pieData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `${value} days`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

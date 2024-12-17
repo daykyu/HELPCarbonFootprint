@@ -144,22 +144,7 @@ const EnergyView = ({ data, todayData }) => {
         </div>
 
         {/* Source Distribution */}
-        <div className="bg-white rounded-lg shadow p-6" data-testid="energy-source-chart">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">
-            Emissions by Source
-          </h4>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sourceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="source" />
-                <YAxis />
-                <Tooltip formatter={(value) => `${value.toFixed(2)} kg CO2e`} />
-                <Bar dataKey="emissions" fill="#3B82F6" name="CO2 Emissions" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+       
       </div>
     </div>
   );
