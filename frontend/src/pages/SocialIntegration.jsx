@@ -1,12 +1,43 @@
 import React, { useState } from 'react';
-import { Share2, X, ChevronUp, MessageSquare, Send, Download, Check } from 'lucide-react';
+import { Share2, X, Download, Check } from 'lucide-react';
+import ChatWindow from '../components/ChatWindow';
 
 const SocialIntegration = () => {
   const [email, setEmail] = useState('');
   const [showAchievement, setShowAchievement] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
   const [chatMessage, setChatMessage] = useState('');
   const [notifications] = useState(1);
+
+  // Dummy data untuk chat list
+  const chatList = [
+    {
+      id: 1,
+      name: 'Citra Azrill Andriana',
+      lastMessage: 'Hey!',
+      timestamp: '2 min ago',
+      unread: 1,
+      profilePic: '/src/assets/Profile.png'
+    },
+    {
+      id: 2,
+      name: 'Sri Cantik',
+      lastMessage: 'How are you?',
+      timestamp: '5 min ago',
+      unread: 0,
+      profilePic: '/src/assets/Profile4.png'
+    }
+  ];
+
+  const chatMessages = [
+    {
+      id: 1,
+      senderId: 1,
+      text: 'Hey!',
+      timestamp: '2 min ago'
+    }
+  ];
 
   const activities = [
     {
@@ -69,16 +100,6 @@ const SocialIntegration = () => {
     }
   ];
 
-  const chatMessages = [
-    {
-      id: 1,
-      sender: 'Citra',
-      message: 'Hey!',
-      timestamp: '2 min ago',
-      avatar: '/api/placeholder/32/32'
-    }
-  ];
-
   const handleSendInvite = (e) => {
     e.preventDefault();
     setEmail('');
@@ -89,80 +110,15 @@ const SocialIntegration = () => {
     setChatMessage('');
   };
 
-  const ChatWindow = () => (
-    <div className="fixed bottom-4 right-4 w-80 bg-white rounded-lg shadow-2xl z-40 overflow-hidden">
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-900 to-blue-800 text-white">
-        <div className="flex items-center space-x-2">
-          <MessageSquare className="h-5 w-5" />
-          <span className="font-medium">Chat Messages</span>
-          {notifications > 0 && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-              {notifications}
-            </span>
-          )}
-        </div>
-        <button 
-          onClick={() => setShowChat(!showChat)} 
-          className="text-white hover:text-gray-200 transition-colors"
-        >
-          <ChevronUp className={`h-5 w-5 transform ${showChat ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-      
-      {showChat && (
-        <>
-          <div className="h-80 overflow-y-auto p-4 space-y-4">
-            {chatMessages.map((msg) => (
-              <div key={msg.id} className="flex space-x-3">
-                <img 
-                  src={msg.avatar} 
-                  alt={msg.sender}
-                  className="w-8 h-8 rounded-full"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-900">{msg.sender}</span>
-                    <span className="text-xs text-gray-500">{msg.timestamp}</span>
-                  </div>
-                  <p className="mt-1 text-gray-700 bg-gray-100 p-2 rounded-lg inline-block">
-                    {msg.message}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <form onSubmit={handleSendMessage} className="p-4 bg-gray-50 border-t">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="submit"
-                className="p-2 bg-indigo-900 text-white rounded-full hover:bg-indigo-800 
-                         transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </div>
-          </form>
-        </>
-      )}
-    </div>
-  );
-
   const AchievementModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="achievement-modal">
       <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Share Achievement</h2>
           <button 
             onClick={() => setShowAchievement(false)}
             className="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-100 rounded-full transition-colors"
+            data-testid="close-achievement-modal"
           >
             <X className="h-5 w-5" />
           </button>
@@ -189,6 +145,7 @@ const SocialIntegration = () => {
               <button
                 key={platform.name}
                 className="group relative"
+                data-testid={`share-${platform.name.toLowerCase()}`}
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center
                                ${platform.color} transition-transform transform 
@@ -208,7 +165,7 @@ const SocialIntegration = () => {
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8" data-testid="social-integration-page">
       {/* Achievements Section */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
         <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-gray-50 to-white">
@@ -225,7 +182,8 @@ const SocialIntegration = () => {
           <div className="space-y-4">
             {/* First Achievement */}
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg 
-                          border border-green-100 shadow-sm hover:shadow-md transition-all">
+                          border border-green-100 shadow-sm hover:shadow-md transition-all"
+                 data-testid="first-achievement">
               <div className="flex items-center space-x-3">
                 <span className="text-gray-900 font-medium">
                   Log your first carbon emission activity
@@ -240,8 +198,8 @@ const SocialIntegration = () => {
               />
             </div>
 
-            {/* Other activities */}
-            {activities.map((activity, index) => (
+           {/* Other activities */}
+           {activities.map((activity, index) => (
               <div 
                 key={index} 
                 className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg
@@ -319,7 +277,21 @@ const SocialIntegration = () => {
         </div>
       </div>
 
-      <ChatWindow />
+      {/* Chat Window Component */}
+      <ChatWindow 
+        showChat={showChat}
+        setShowChat={setShowChat}
+        selectedChat={selectedChat}
+        setSelectedChat={setSelectedChat}
+        chatList={chatList}
+        chatMessages={chatMessages}
+        chatMessage={chatMessage}
+        setChatMessage={setChatMessage}
+        notifications={notifications}
+        handleSendMessage={handleSendMessage}
+      />
+      
+      {/* Achievement Modal */}
       {showAchievement && <AchievementModal />}
     </div>
   );

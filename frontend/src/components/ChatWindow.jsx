@@ -1,0 +1,154 @@
+import React from 'react';
+import { ChevronLeft, MessageSquare, Send, X, ChevronUp } from 'lucide-react';
+
+const ChatWindow = ({ 
+  showChat, 
+  setShowChat, 
+  selectedChat, 
+  setSelectedChat,
+  chatList,
+  chatMessages,
+  chatMessage,
+  setChatMessage,
+  notifications,
+  handleSendMessage 
+}) => {
+  return (
+    <div className={`fixed bottom-0 right-4 ${showChat ? 'w-96' : 'w-80'} bg-white rounded-t-lg shadow-2xl z-40 overflow-hidden transition-all duration-300`} 
+         data-testid="chat-window"
+         style={{ height: showChat ? '600px' : 'auto' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 bg-indigo-900 text-white">
+        <div className="flex items-center space-x-2">
+          {selectedChat ? (
+            <>
+              <button 
+                onClick={() => setSelectedChat(null)}
+                className="p-1 hover:bg-indigo-800 rounded-full transition-colors"
+                data-testid="chat-back-button"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <img 
+                src={selectedChat.profilePic} 
+                alt={selectedChat.name}
+                className="w-8 h-8 rounded"
+                data-testid="chat-profile-image"
+              />
+              <span className="font-medium" data-testid="chat-user-name">{selectedChat.name}</span>
+            </>
+          ) : (
+            <>
+              <MessageSquare className="h-5 w-5" />
+              <span className="font-medium">Chat Messages</span>
+              {notifications > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full" data-testid="chat-notification-badge">
+                  {notifications}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+        <button 
+          onClick={() => {
+            setShowChat(!showChat);
+            if (showChat) setSelectedChat(null);
+          }}
+          className="text-white hover:text-gray-200 p-1 hover:bg-indigo-800 rounded-full transition-colors"
+          data-testid="chat-toggle-button"
+        >
+          {showChat ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <ChevronUp className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+
+      {showChat && (
+        <>
+          {!selectedChat ? (
+            // Chat List View
+            <div className="overflow-y-auto divide-y" style={{ height: '520px' }} data-testid="chat-list">
+              {chatList.map((chat) => (
+                <div
+                  key={chat.id}
+                  onClick={() => setSelectedChat(chat)}
+                  className="flex items-center space-x-3 p-4 hover:bg-gray-50 cursor-pointer"
+                  data-testid={`chat-list-item-${chat.id}`}
+                >
+                  <img 
+                    src={chat.profilePic}
+                    alt={chat.name}
+                    className="w-12 h-12 rounded"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <span className="font-medium text-gray-900 truncate">{chat.name}</span>
+                      <span className="text-xs text-gray-500">{chat.timestamp}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 truncate">{chat.lastMessage}</p>
+                  </div>
+                  {chat.unread > 0 && (
+                    <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full" data-testid={`unread-badge-${chat.id}`}>
+                      {chat.unread}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Individual Chat View
+            <>
+              <div className="overflow-y-auto p-4 space-y-4 bg-gray-50" 
+                   style={{ height: '520px' }}
+                   data-testid="chat-messages">
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className="flex space-x-3" data-testid={`chat-message-${msg.id}`}>
+                    <img 
+                      src={selectedChat.profilePic}
+                      alt={selectedChat.name}
+                      className="w-8 h-8 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium text-gray-900">{selectedChat.name}</span>
+                        <span className="text-xs text-gray-500">{msg.timestamp}</span>
+                      </div>
+                      <p className="mt-1 text-gray-700 bg-white p-3 rounded-lg inline-block shadow-sm">
+                        {msg.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleSendMessage} className="p-4 bg-white border-t" data-testid="chat-message-form">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={chatMessage}
+                    onChange={(e) => setChatMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    data-testid="chat-message-input"
+                  />
+                  <button
+                    type="submit"
+                    className="p-2 bg-indigo-900 text-white rounded-full hover:bg-indigo-800 
+                             transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    data-testid="chat-send-button"
+                  >
+                    <Send className="h-5 w-5" />
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default ChatWindow;
