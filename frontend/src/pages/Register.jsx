@@ -1,8 +1,8 @@
-// src/pages/Register.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Alert from '../components/Alert';
+import bgImage from '../assets/bg.jpg';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -46,13 +46,36 @@ const Register = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-blue-50" data-testid="register-page">
-      {/* Sidebar included in the layout */}
+    <div className="min-h-screen relative flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" data-testid="register-page">
+      {/* Background Layers */}
+      <div className="fixed inset-0 z-0">
+        {/* Main Background Image */}
+        <div 
+          className="absolute inset-0 opacity-30 transition-opacity duration-1000"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'brightness(1.1) contrast(0.9)',
+          }}
+        />
 
-      <div className="flex-1 p-8 ">
-        <div className="bg-white rounded-lg shadow-sm p-6 max-w-3xl mx-auto">
+        {/* Gradient Overlay */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-br from-blue-900/5 via-transparent to-emerald-900/5"
+          style={{ mixBlendMode: 'soft-light' }}
+        />
+
+        {/* Glass Effect Base Layer */}
+        <div className="absolute inset-0 backdrop-blur-[1px] bg-white/10" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-3xl">
+        <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="border-b border-gray-200 pb-4 mb-6">
-            <h2 className="text-xl font-medium text-gray-900" data-testid="register-title">
+            <h2 className="text-2xl font-bold text-gray-900 text-center" data-testid="register-title">
               Personal Information
             </h2>
           </div>
@@ -73,7 +96,9 @@ const Register = () => {
                   id="username"
                   required
                   data-testid="username-input"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+                           transition-all duration-200"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 />
@@ -88,7 +113,9 @@ const Register = () => {
                   id="email"
                   required
                   data-testid="email-input"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+                           transition-all duration-200"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
@@ -103,7 +130,9 @@ const Register = () => {
                   id="phone"
                   required
                   data-testid="phone-input"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+                           transition-all duration-200"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
@@ -113,42 +142,48 @@ const Register = () => {
             {/* Transportation, Energy, and Dietary Section */}
             <div className="space-y-4">
               <div>
-                <label htmlFor="transportation" className="block text-sm font-medium text-indigo-900 mb-1">
+                <label htmlFor="transportation" className="block text-sm font-medium text-gray-700 mb-1">
                   Transportation choice
                 </label>
                 <input
                   type="text"
                   id="transportation"
                   data-testid="transportation-input"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+                           transition-all duration-200"
                   value={formData.transportation}
                   onChange={(e) => setFormData({ ...formData, transportation: e.target.value })}
                 />
               </div>
 
               <div>
-                <label htmlFor="energy" className="block text-sm font-medium text-indigo-900 mb-1">
+                <label htmlFor="energy" className="block text-sm font-medium text-gray-700 mb-1">
                   Energy sources
                 </label>
                 <input
                   type="text"
                   id="energy"
                   data-testid="energy-input"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+                           transition-all duration-200"
                   value={formData.energy}
                   onChange={(e) => setFormData({ ...formData, energy: e.target.value })}
                 />
               </div>
 
               <div>
-                <label htmlFor="dietary" className="block text-sm font-medium text-indigo-900 mb-1">
+                <label htmlFor="dietary" className="block text-sm font-medium text-gray-700 mb-1">
                   Dietary preferences
                 </label>
                 <input
                   type="text"
                   id="dietary"
                   data-testid="dietary-input"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+                           transition-all duration-200"
                   value={formData.dietary}
                   onChange={(e) => setFormData({ ...formData, dietary: e.target.value })}
                 />
@@ -162,7 +197,9 @@ const Register = () => {
                   id="reminderFrequency"
                   required
                   data-testid="activity-reminder-select"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+                           transition-all duration-200"
                   value={formData.reminderFrequency}
                   onChange={(e) => setFormData({ ...formData, reminderFrequency: e.target.value })}
                 >
@@ -171,20 +208,30 @@ const Register = () => {
                   <option value="monthly">Monthly</option>
                 </select>
               </div>
-
             </div>
 
-            <div className="pt-4">
+            <div className="pt-6">
               <button
                 type="submit"
                 data-testid="register-submit"
-                className="block mx-auto w-40 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
+                className="w-full md:w-auto md:min-w-[160px] block mx-auto px-8 py-3 
+                         bg-green-500 text-white rounded-lg hover:bg-green-600 
+                         focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                         transform hover:scale-105 transition-all duration-200"
               >
                 Create Profile
               </button>
             </div>
           </form>
         </div>
+      </div>
+
+      {/* Animated Elements */}
+      <div className="fixed inset-0 z-[1] pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full 
+                      blur-3xl animate-float mix-blend-overlay"/>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-500/5 rounded-full 
+                      blur-3xl animate-float-delayed mix-blend-overlay"/>
       </div>
     </div>
   );

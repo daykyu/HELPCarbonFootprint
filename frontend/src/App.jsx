@@ -8,6 +8,7 @@ import DailyActivityLog from './pages/DailyActivityLog';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import Recommendations from './pages/Recommendations';
+import SocialIntegration from './pages/SocialIntegration';
 import Layout from './components/Layout';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
         <Route path="daily-log" element={<DailyActivityLog />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="recommendations" element={<Recommendations />} />
+        <Route path="social" element={<SocialIntegration />} />
         {/* Redirect ke daily-log setelah login */}
         <Route index element={<Navigate to="/daily-log" replace />} />
       </Route>

@@ -1,5 +1,4 @@
- // src/components/Sidebar.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   UserCircle,
@@ -9,10 +8,14 @@ import {
   History,
   BookOpen,
   LogOut,
-  Lightbulb, // Icon baru untuk Recommendations
+  Lightbulb,
+  Menu,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ isExpanded, setIsExpanded }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -60,74 +63,174 @@ const Sidebar = () => {
       testId: 'nav-learn'
     }
   ];
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
-  return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-indigo-900 shadow-lg" data-testid="sidebar">
-      <div className="p-6 border-b border-indigo-800">
-        <div className="flex items-center gap-4">
-          <div className="min-w-[40px] h-10 bg-white rounded flex items-center justify-center">
-            <svg 
-              className="w-6 h-6 text-indigo-900" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
-              />
-            </svg>
-          </div>
-          <span className="text-white text-xl font-bold" data-testid="app-title">
+  const Logo = () => (
+    <div className="relative flex items-center h-16 px-4">
+      <div className="flex items-center">
+        <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
+          <svg 
+            className="w-6 h-6 text-indigo-900" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
+            />
+          </svg>
+        </div>
+        {isExpanded && (
+          <span className="ml-4 text-white text-xl font-bold whitespace-nowrap" data-testid="app-title">
             HELP CARBON
           </span>
+        )}
+      </div>
+    </div>
+  );
+
+  // Toggle Button Component
+  const ToggleButton = () => (
+    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center">
+      <div className="relative">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={`
+            flex items-center justify-center
+            w-6 h-12
+            bg-indigo-800 hover:bg-indigo-700
+            text-white
+            transition-all duration-200
+            border border-indigo-700
+            ${isExpanded ? 'rounded-r-xl' : 'rounded-xl ml-1'}
+            focus:outline-none
+            shadow-lg hover:shadow-xl
+          `}
+          data-testid="toggle-sidebar"
+        >
+          {isExpanded ? (
+            <ChevronLeft className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Navigation */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-indigo-900 z-50">
+        <div className="flex items-center justify-between">
+          <Logo />
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-white p-4"
+          >
+            <Menu size={24} />
+          </button>
         </div>
       </div>
 
-      <nav className="mt-6 flex flex-col justify-between h-[calc(100%-96px)]" data-testid="nav-menu">
-        <div className="space-y-1">
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40">
+          <div className="fixed right-0 top-0 h-full w-64 bg-indigo-900 p-4">
+            <nav className="flex-1 mt-4">
+              {menuItems.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`
+                    flex items-center px-4 py-3 text-gray-300 
+                    hover:bg-indigo-800 hover:text-white
+                    ${location.pathname === item.path ? 'bg-indigo-800 text-white' : ''}
+                  `}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="ml-4 text-sm">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <div 
+        className={`hidden lg:flex flex-col fixed left-0 top-0 h-full bg-indigo-900 
+                    transition-all duration-300 ease-in-out
+                    ${isExpanded ? 'w-64' : 'w-20'}`}
+      >
+        {/* Logo and Toggle Button Container */}
+        <div className="relative border-b border-indigo-800">
+          <Logo />
+          <ToggleButton />
+        </div>
+
+        <nav className="flex-1 mt-4 overflow-y-auto">
           {menuItems.map((item, index) => (
             <Link
               key={index}
               to={item.path}
               data-testid={item.testId}
               className={`
-                flex items-center px-6 py-3 text-gray-300 
-                hover:bg-indigo-800 hover:text-white transition-all duration-200
-                ${location.pathname === item.path 
-                  ? 'bg-indigo-800 text-white border-l-4 border-white' 
-                  : 'border-l-4 border-transparent'
-                }
+                flex items-center px-4 py-3 text-gray-300 
+                hover:bg-indigo-800 hover:text-white
+                ${location.pathname === item.path ? 'bg-indigo-800 text-white' : ''}
+                ${!isExpanded ? 'justify-center' : ''}
+                group/item relative
               `}
             >
-              <item.icon className="w-5 h-5" />
-              <span className="ml-4 text-sm font-medium">{item.label}</span>
+              <item.icon className={`w-5 h-5 flex-shrink-0 ${!isExpanded && 'mx-auto'}`} />
+              {isExpanded && (
+                <span className="ml-4 text-sm truncate">{item.label}</span>
+              )}
+              {!isExpanded && (
+                <div className="hidden group-hover/item:block absolute left-full ml-2 
+                              bg-gray-900 text-white px-3 py-2 rounded-md text-sm 
+                              whitespace-nowrap z-50 shadow-lg">
+                  {item.label}
+                </div>
+              )}
             </Link>
           ))}
-        </div>
+        </nav>
 
-        <div className="p-4">
+        <div className="p-4 mt-auto">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-6 py-3 text-gray-300 
-                     hover:bg-indigo-800 hover:text-white transition-all duration-200 
-                     rounded-lg border border-gray-700"
+            className={`
+              flex items-center text-gray-300 hover:bg-indigo-800 hover:text-white
+              px-4 py-3 rounded-lg border border-gray-700 w-full
+              ${!isExpanded ? 'justify-center' : ''}
+              group/logout relative
+            `}
             data-testid="logout-button"
           >
             <LogOut className="w-5 h-5" />
-            <span className="ml-4 text-sm font-medium">Logout</span>
+            {isExpanded && <span className="ml-4 text-sm">Logout</span>}
+            {!isExpanded && (
+              <div className="hidden group-hover/logout:block absolute left-full ml-2 
+                            bg-gray-900 text-white px-3 py-2 rounded-md text-sm 
+                            whitespace-nowrap z-50 shadow-lg">
+                Logout
+              </div>
+            )}
           </button>
         </div>
-      </nav>
-    </div>
+      </div>
+    </>
   );
 };
 
 export default Sidebar;
-
