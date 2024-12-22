@@ -14,9 +14,10 @@ const ChatWindow = ({
   handleSendMessage 
 }) => {
   return (
-    <div className={`fixed bottom-0 right-4 ${showChat ? 'w-96' : 'w-80'} bg-white rounded-t-lg shadow-2xl z-40 overflow-hidden transition-all duration-300`} 
-         data-testid="chat-window"
-         style={{ height: showChat ? '600px' : 'auto' }}>
+    <div className={`fixed bottom-0 right-4 ${showChat ? 'w-96' : 'w-80'} bg-white rounded-t-lg shadow-2xl z-40 
+                    transition-all duration-300 flex flex-col`}
+         style={{ height: showChat ? '600px' : 'auto' }}
+         data-testid="chat-window">
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-indigo-900 text-white">
         <div className="flex items-center space-x-2">
@@ -66,10 +67,10 @@ const ChatWindow = ({
       </div>
 
       {showChat && (
-        <>
+        <div className="flex-1 flex flex-col">
           {!selectedChat ? (
             // Chat List View
-            <div className="overflow-y-auto divide-y" style={{ height: '520px' }} data-testid="chat-list">
+            <div className="flex-1 overflow-y-auto divide-y" data-testid="chat-list">
               {chatList.map((chat) => (
                 <div
                   key={chat.id}
@@ -100,9 +101,7 @@ const ChatWindow = ({
           ) : (
             // Individual Chat View
             <>
-              <div className="overflow-y-auto p-4 space-y-4 bg-gray-50" 
-                   style={{ height: '520px' }}
-                   data-testid="chat-messages">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50" data-testid="chat-messages">
                 {chatMessages.map((msg) => (
                   <div key={msg.id} className="flex space-x-3" data-testid={`chat-message-${msg.id}`}>
                     <img 
@@ -123,8 +122,8 @@ const ChatWindow = ({
                 ))}
               </div>
 
-              <form onSubmit={handleSendMessage} className="p-4 bg-white border-t" data-testid="chat-message-form">
-                <div className="flex space-x-2">
+              <div className="bg-white border-t p-4 mt-auto" data-testid="chat-input-container">
+                <form onSubmit={handleSendMessage} className="flex space-x-2" data-testid="chat-message-form">
                   <input
                     type="text"
                     value={chatMessage}
@@ -141,11 +140,11 @@ const ChatWindow = ({
                   >
                     <Send className="h-5 w-5" />
                   </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );
