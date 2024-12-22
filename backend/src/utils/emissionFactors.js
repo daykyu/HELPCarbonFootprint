@@ -1,9 +1,9 @@
 // backend/src/utils/emissionFactors.js
 const EMISSION_FACTORS = {
   transportation: {
-    car: 0.1707,        // kg CO2/km
-    bus: 0.0965,       // kg CO2/km
-    motorcycle: 0.11337, // kg CO2/km
+    car: 0.2,        // kg CO2/km
+    bus: 0.08,       // kg CO2/km
+    motorcycle: 0.1, // kg CO2/km
     bicycle: 0,      // kg CO2/km
     walking: 0       // kg CO2/km
   },
