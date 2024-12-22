@@ -1,4 +1,5 @@
 // src/components/views/EnergyView.jsx
+// import react
 import React from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
