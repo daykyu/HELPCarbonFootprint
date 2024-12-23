@@ -1,4 +1,3 @@
-// backend/src/controllers/userController.js
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -30,6 +29,7 @@ exports.register = async (req, res) => {
       email,
       password: hashedPassword,
       phone,
+      role: 'user', // Default role
       transportation,
       energy,
       dietary,
@@ -74,7 +74,10 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id },
+      { 
+        userId: user._id,
+        role: user.role 
+      },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -82,6 +85,7 @@ exports.login = async (req, res) => {
     res.json({
       success: true,
       token,
+      role: user.role,
       user: {
         id: user._id,
         username: user.username,
@@ -97,7 +101,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// backend/src/controllers/userController.js
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
@@ -113,7 +116,6 @@ exports.getProfile = async (req, res) => {
       user
     });
   } catch (error) {
-    console.error('Error fetching profile:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch profile'
@@ -125,7 +127,6 @@ exports.updateProfile = async (req, res) => {
   try {
     const { username, phone, transportation, energy, dietary, reminderFrequency } = req.body;
 
-    // Validate input
     if (!username || !phone || !reminderFrequency) {
       return res.status(400).json({
         success: false,
@@ -141,7 +142,6 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    // Update user fields
     user.username = username;
     user.phone = phone;
     user.transportation = transportation;
@@ -151,7 +151,6 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
-    // Send back updated user without password
     const updatedUser = await User.findById(req.userId).select('-password');
 
     res.json({
@@ -160,7 +159,6 @@ exports.updateProfile = async (req, res) => {
       user: updatedUser
     });
   } catch (error) {
-    console.error('Error updating profile:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update profile'

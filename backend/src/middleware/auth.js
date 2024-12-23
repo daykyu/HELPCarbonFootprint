@@ -1,4 +1,3 @@
-// backend/src/middleware/auth.js
 const jwt = require('jsonwebtoken');
 
 const auth = async (req, res, next) => {
@@ -14,6 +13,7 @@ const auth = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
+    req.userRole = decoded.role; // Add role to request
     next();
   } catch (error) {
     res.status(401).json({
