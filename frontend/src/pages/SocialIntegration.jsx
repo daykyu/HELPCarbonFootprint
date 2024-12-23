@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Share2, X, Download, Check } from 'lucide-react';
+import React, { useState,useEffect } from 'react';
+import { Share2, X, Download, Check, Link,LogOut } from 'lucide-react';
 import ChatWindow from '../components/ChatWindow';
 
 const SocialIntegration = () => {
@@ -9,8 +9,91 @@ const SocialIntegration = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatMessage, setChatMessage] = useState('');
   const [notifications] = useState(1);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareNotification, setShareNotification] = useState({ show: false, message: '' });
 
-  // Dummy data untuk chat list
+  // connect social media state
+  const [connectedAccounts, setConnectedAccounts] = useState({
+    instagram: null,
+    facebook: null,
+    linkedin: null
+  });
+// Load data dari localStorage
+useEffect(() => {
+  const savedAccounts = localStorage.getItem('connectedSocialAccounts');
+  if (savedAccounts) {
+    setConnectedAccounts(JSON.parse(savedAccounts));
+  }
+}, []);
+
+// Fungsi untuk handle Instagram login
+const handleInstagramLogin = () => {
+  const username = prompt('Masukkan username Instagram Anda (tanpa @):');
+  if (username) {
+    const updatedAccounts = {
+      ...connectedAccounts,
+      instagram: {
+        username: username,
+        connectedAt: new Date().toISOString()
+      }
+    };
+    setConnectedAccounts(updatedAccounts);
+    localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
+    window.open(`https://instagram.com/${username}`, '_blank');
+  }
+};
+// Fungsi untuk handle Facebook login
+const handleFacebookLogin = () => { 
+  const username = prompt('Masukkan username Facebook Anda (tanpa @):');
+  if (username) {
+    const updatedAccounts = {
+      ...connectedAccounts,
+      facebook: {
+        username: username,
+        connectedAt: new Date().toISOString()
+      }
+    };
+    setConnectedAccounts(updatedAccounts);
+    localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
+    window.open(`https://www.facebook.com/${username}`, '_blank');
+  }
+};
+// Fungsi untuk handle LinkedIn login
+const handleLinkedInLogin = () => {
+  const username = prompt('Masukkan username LinkedIn Anda (tanpa @):');
+  if (username) {
+    const updatedAccounts = {
+      ...connectedAccounts,
+      linkedin: {
+        username: username,
+        connectedAt: new Date().toISOString()
+      }
+    };
+    setConnectedAccounts(updatedAccounts);
+    localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
+    window.open(`https://www.linkedin.com/in/${username}`, '_blank');
+  }
+};
+
+// Fungsi untuk disconnect account
+const handleDisconnectAccount = (platform) => {
+  const updatedAccounts = {
+    ...connectedAccounts,
+    [platform]: null
+  };
+  setConnectedAccounts(updatedAccounts);
+  localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
+};
+
+
+  // Achievement data yang akan dishare
+  const achievementData = {
+    title: "Achievement Unlocked!",
+    description: "Logging your first carbon emission activity",
+    date: "December 4, 2024",
+    shareUrl: window.location.href
+  };
+
   const chatList = [
     {
       id: 1,
@@ -58,17 +141,20 @@ const SocialIntegration = () => {
     {
       name: 'Instagram',
       icon: 'https://cdn-icons-png.flaticon.com/512/174/174855.png',
-      class: 'hover:bg-pink-50'
+      class: 'hover:bg-pink-50',
+      connectHandler: handleInstagramLogin,
     },
     {
       name: 'Facebook',
       icon: 'https://cdn-icons-png.flaticon.com/512/124/124010.png',
-      class: 'hover:bg-blue-50'
+      class: 'hover:bg-blue-50',
+      connectHandler: handleFacebookLogin,
     },
     {
       name: 'LinkedIn',
       icon: 'https://cdn-icons-png.flaticon.com/512/174/174857.png',
-      class: 'hover:bg-blue-50'
+      class: 'hover:bg-blue-50',
+      connectHandler: handleLinkedInLogin,
     }
   ];
 
@@ -76,30 +162,92 @@ const SocialIntegration = () => {
     { 
       name: 'Instagram', 
       color: 'bg-gradient-to-r from-purple-500 to-pink-500',
-      icon: 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+      icon: 'https://cdn-icons-png.flaticon.com/512/174/174855.png',
+      shareText: `🌟 Achievement Unlocked! 🌟\n\nI just earned an achievement for logging my first carbon emission activity!\n\nJoin me in making a difference! 🌱\n\n#Sustainability #CarbonFootprint`,
+      shareUrl: 'instagram://story-camera'
     },
     { 
       name: 'WhatsApp', 
       color: 'bg-green-500',
-      icon: 'https://cdn-icons-png.flaticon.com/512/733/733585.png'
+      icon: 'https://cdn-icons-png.flaticon.com/512/733/733585.png',
+      shareText: `🌟 Achievement Unlocked! 🌟\n\nI just earned an achievement for logging my first carbon emission activity! Check it out:`,
+      shareUrl: 'whatsapp://send'
     },
     { 
       name: 'Facebook', 
       color: 'bg-blue-600',
-      icon: 'https://cdn-icons-png.flaticon.com/512/124/124010.png'
+      icon: 'https://cdn-icons-png.flaticon.com/512/124/124010.png',
+      shareText: 'I just earned an achievement for making a positive environmental impact!',
+      shareUrl: 'https://www.facebook.com/sharer/sharer.php'
     },
     { 
       name: 'TikTok', 
       color: 'bg-black',
-      icon: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png'
+      icon: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png',
+      shareText: '🌟 Green Achievement Unlocked! 🌍 #Sustainability #Environment',
+      shareUrl: 'https://www.tiktok.com/upload'
     },
     { 
       name: 'Twitter', 
       color: 'bg-blue-400',
-      icon: 'https://cdn-icons-png.flaticon.com/512/733/733579.png'
+      icon: 'https://cdn-icons-png.flaticon.com/512/733/733579.png',
+      shareText: '🌟 Just unlocked a new achievement! Logged my first carbon emission activity and taking steps towards a sustainable future. Join me! 🌱 #Sustainability',
+      shareUrl: 'https://twitter.com/intent/tweet'
     }
   ];
 
+  const handleShare = async (platform) => {
+    setIsSharing(true);
+    try {
+      const shareText = platform.shareText;
+      const shareUrl = achievementData.shareUrl;
+      
+      switch (platform.name) {
+        case 'WhatsApp':
+          window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank');
+          break;
+          
+        case 'Facebook':
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank');
+          break;
+          
+        case 'Twitter':
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+          break;
+          
+        case 'Instagram':
+          alert('To share on Instagram:\n1. Screenshot your achievement\n2. Open Instagram\n3. Create a new post or story with the screenshot');
+          break;
+          
+        case 'TikTok':
+          alert('To share on TikTok:\n1. Screenshot your achievement\n2. Open TikTok\n3. Create a new video showing your achievement');
+          break;
+          
+        default:
+          console.error('Platform not supported');
+      }
+      
+      showShareNotification(platform.name, true);
+    } catch (error) {
+      console.error('Error sharing:', error);
+      showShareNotification(platform.name, false);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const showShareNotification = (platformName, success) => {
+    setShareNotification({
+      show: true,
+      message: success 
+        ? `Successfully shared to ${platformName}!` 
+        : `Failed to share to ${platformName}. Please try again.`
+    });
+
+    setTimeout(() => {
+      setShareNotification({ show: false, message: '' });
+    }, 3000);
+  };
   const handleSendInvite = (e) => {
     e.preventDefault();
     setEmail('');
@@ -131,10 +279,10 @@ const SocialIntegration = () => {
               <Check className="h-16 w-16 text-white" />
             </div>
           </div>
-          <div className="text-sm text-gray-600">December 4, 2024</div>
+          <div className="text-sm text-gray-600">{achievementData.date}</div>
           <div className="font-medium mt-2">You earned an achievement by</div>
           <div className="font-medium text-indigo-900 text-lg">
-            Logging your first carbon emission activity
+            {achievementData.description}
           </div>
         </div>
 
@@ -145,28 +293,61 @@ const SocialIntegration = () => {
               <button
                 key={platform.name}
                 className="group relative"
+                onClick={() => handleShare(platform)}
+                disabled={isSharing}
                 data-testid={`share-${platform.name.toLowerCase()}`}
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center
-                               ${platform.color} transition-transform transform 
-                               group-hover:scale-110 shadow-md`}>
-                  <img 
-                    src={platform.icon} 
-                    alt={platform.name}
-                    className="w-6 h-6 object-contain brightness-0 invert"
-                  />
+                             ${platform.color} transition-transform transform 
+                             ${isSharing ? 'opacity-50' : 'group-hover:scale-110'} 
+                             shadow-md cursor-pointer`}>
+                  {isSharing ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white"></div>
+                  ) : (
+                    <img 
+                      src={platform.icon} 
+                      alt={platform.name}
+                      className="w-6 h-6 object-contain brightness-0 invert"
+                    />
+                  )}
+                </div>
+                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 
+                              text-xs text-gray-600 whitespace-nowrap">
+                  {platform.name}
                 </div>
               </button>
             ))}
           </div>
         </div>
+
+        {/* Copy Link Button */}
+        <div className="mt-12">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(achievementData.shareUrl);
+              showShareNotification('Clipboard', true);
+            }}
+            className="w-full py-2 px-4 border border-gray-200 rounded-lg text-gray-700
+                     hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <Link className="h-4 w-4" />
+            Copy Link
+          </button>
+        </div>
       </div>
+      
+      {/* Notification Toast */}
+      {shareNotification.show && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg 
+                      shadow-lg transition-opacity duration-300">
+          {shareNotification.message}
+        </div>
+      )}
     </div>
   );
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8" data-testid="social-integration-page">
-      {/* Achievements Section */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
         <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-gray-50 to-white">
           <h2 className="text-xl font-bold text-gray-900">Achievements</h2>
@@ -180,7 +361,6 @@ const SocialIntegration = () => {
         </div>
         <div className="p-6">
           <div className="space-y-4">
-            {/* First Achievement */}
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg 
                           border border-green-100 shadow-sm hover:shadow-md transition-all"
                  data-testid="first-achievement">
@@ -198,8 +378,7 @@ const SocialIntegration = () => {
               />
             </div>
 
-           {/* Other activities */}
-           {activities.map((activity, index) => (
+            {activities.map((activity, index) => (
               <div 
                 key={index} 
                 className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg
@@ -209,13 +388,6 @@ const SocialIntegration = () => {
                 <span className="text-gray-600">{activity.title}</span>
               </div>
             ))}
-            <button 
-              className="text-sm text-blue-600 hover:text-blue-800 mt-4 font-medium
-                         hover:underline transition-colors"
-              data-testid="view-all-achievements"
-            >
-              View all
-            </button>
           </div>
         </div>
       </div>
@@ -251,33 +423,57 @@ const SocialIntegration = () => {
       </div>
 
       {/* Connect Social Media Section */}
+      <div className="max-w-4xl mx-auto p-4 md:p-0">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
         <div className="p-6 border-b bg-gradient-to-r from-gray-50 to-white">
           <h2 className="text-xl font-bold text-gray-900">Connect social media</h2>
         </div>
+        
         <div className="p-6">
-          <div className="flex flex-wrap gap-4">
-            {socialPlatforms.map((platform) => (
-              <button
-                key={platform.name}
-                className={`flex items-center space-x-3 px-6 py-3 border border-gray-200 rounded-lg 
-                         ${platform.class} transition-all hover:shadow-md
-                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                data-testid={`connect-${platform.name.toLowerCase()}`}
-              >
-                <img 
-                  src={platform.icon} 
-                  alt={platform.name} 
-                  className="w-5 h-5 object-contain"
-                />
-                <span className="font-medium text-gray-700">{platform.name}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {socialPlatforms.map((platform) => {
+              const isConnected = connectedAccounts[platform.name.toLowerCase()];
+              
+              return (
+                <div key={platform.name} className="relative">
+                  <button
+                    onClick={isConnected ? 
+                      () => handleDisconnectAccount(platform.name.toLowerCase()) : 
+                      platform.connectHandler}
+                    className={`w-full flex items-center justify-center space-x-3 px-4 py-3 
+                             border border-gray-200 rounded-lg ${platform.hoverColor} 
+                             transition-all hover:shadow-md`}
+                  >
+                    <img 
+                      src={platform.icon} 
+                      alt={platform.name} 
+                      className="w-5 h-5 object-contain"
+                    />
+                    <span className="font-medium text-gray-700">
+                      {isConnected ? (
+                        <div className="flex items-center space-x-2">
+                          <span>@{connectedAccounts[platform.name.toLowerCase()].username}</span>
+                          <LogOut className="h-4 w-4 text-gray-500" />
+                        </div>
+                      ) : (
+                        `Connect ${platform.name}`
+                      )}
+                    </span>
+                  </button>
+                  
+                  {isConnected && (
+                    <div className="mt-2 text-xs text-gray-500 text-center">
+                      Connected as @{connectedAccounts[platform.name.toLowerCase()].username}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
+    </div>
 
-      {/* Chat Window Component */}
       <ChatWindow 
         showChat={showChat}
         setShowChat={setShowChat}
@@ -291,8 +487,15 @@ const SocialIntegration = () => {
         handleSendMessage={handleSendMessage}
       />
       
-      {/* Achievement Modal */}
       {showAchievement && <AchievementModal />}
+      
+        {/* Notification Toast */}
+        {shareNotification.show && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 
+                      rounded-lg shadow-lg transition-opacity duration-300">
+          {shareNotification.message}
+        </div>
+      )}
     </div>
   );
 };
