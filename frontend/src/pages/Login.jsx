@@ -20,7 +20,7 @@ const Login = () => {
       setFormData(credentials);
       sessionStorage.removeItem('tempCredentials');
     }
-  }, [navigate]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,11 +29,16 @@ const Login = () => {
       
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
+        localStorage.setItem('userRole', response.data.role);
         
-        // Check intended path jika ada
-        const intendedPath = localStorage.getItem('intendedPath') || '/daily-log';
-        localStorage.removeItem('intendedPath'); // Clear intended path
-        navigate(intendedPath);
+        // Redirect berdasarkan role
+        if (response.data.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else {
+          const intendedPath = localStorage.getItem('intendedPath') || '/daily-log';
+          localStorage.removeItem('intendedPath');
+          navigate(intendedPath);
+        }
       }
     } catch (error) {
       setMessage({
@@ -49,7 +54,7 @@ const Login = () => {
       <div className="fixed inset-0 z-0">
         {/* Main Background Image */}
         <div 
-          className="absolute inset-0 opacity-30 transition-opacity duration-1000"
+          className="absolute inset-0 opacity-50 transition-opacity duration-1000"
           style={{
             backgroundImage: `url(${bgImage})`,
             backgroundSize: 'cover',
@@ -155,7 +160,7 @@ const Login = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-700">
+        <div className="text-center mt-8 mb-4 text-sm text-gray-700">
           Copyright © 2024 | All Rights Reserved<br />
           Developed by HELP University x STIKOM Students for BIT216 - Software Engineering Principles
         </div>
