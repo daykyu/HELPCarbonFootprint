@@ -2,12 +2,14 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
+import AdminLayout from './components/admin/AdminLayout';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import DailyActivityLog from './pages/DailyActivityLog';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
+import Educational from './pages/admin/EducationalContent';
 import Recommendations from './pages/Recommendations';
 import SocialIntegration from './pages/SocialIntegration';
 import Layout from './components/Layout';
@@ -24,16 +26,17 @@ function App() {
 
       {/* Admin routes */}
       <Route
-        path="/admin/*"
+        path="/admin"
         element={
           <AdminRoute>
-            <Routes>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              {/*  other admin routes  */}
-            </Routes>
+            <AdminLayout />
           </AdminRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="educational" element={<Educational />} />
+      </Route>
 
       {/* Protected user routes */}
       <Route
