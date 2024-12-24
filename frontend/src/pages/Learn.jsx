@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Heart } from 'lucide-react';
+import { Search, Heart, BookOpen, FolderOpen } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -66,6 +66,41 @@ const Learn = () => {
       fetchFavoriteContent();
     }
   }, [activeCategory, searchQuery]);
+
+  // Empty State Components
+  const EmptyState = ({ type }) => {
+    const config = {
+      content: {
+        icon: <FolderOpen className="w-16 h-16 text-indigo-400" />,
+        title: "No Content Available",
+        description: "There's no content available at the moment. Please check back later for updates.",
+      },
+      favorites: {
+        icon: <Heart className="w-16 h-16 text-indigo-400" />,
+        title: "No Favorites Yet",
+        description: "You haven't added any content to your favorites yet. Browse our content and click the heart icon to start building your collection.",
+      },
+      search: {
+        icon: <BookOpen className="w-16 h-16 text-indigo-400" />,
+        title: "No Results Found",
+        description: "We couldn't find any content matching your search. Try adjusting your search terms or browse our other content.",
+      }
+    }[type];
+
+    return (
+      <div className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm text-center">
+        <div className="bg-gray-50 rounded-full p-6 mb-4">
+          {config.icon}
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {config.title}
+        </h3>
+        <p className="text-gray-600 max-w-md">
+          {config.description}
+        </p>
+      </div>
+    );
+  };
 
   // Regular content card without heart icon
   const ContentCard = ({ item }) => (
@@ -156,6 +191,10 @@ const Learn = () => {
     );
   }
 
+  const filteredContent = content.recent.filter(item => 
+    activeCategory === 'all' || item.category === activeCategory
+  );
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Search and Category Filters */}
@@ -199,24 +238,30 @@ const Learn = () => {
             ? 'Recommended Content' 
             : `Recommended ${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}`}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {content.recent
-            .filter(item => activeCategory === 'all' || item.category === activeCategory)
-            .map(item => (
+        {filteredContent.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredContent.map(item => (
               <ContentCard key={item._id} item={item} />
             ))}
-        </div>
+          </div>
+        ) : (
+          <EmptyState type={searchQuery ? 'search' : 'content'} />
+        )}
       </div>
 
       {/* Favorites Content - Only show on 'all' category */}
-      {activeCategory === 'all' && content.favorites.length > 0 && (
+      {activeCategory === 'all' && (
         <div className="mt-12">
           <h2 className="text-xl font-semibold text-indigo-900 mb-4">My Favorite Content</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {content.favorites.map(item => (
-              <FavoriteCard key={item._id} item={item} />
-            ))}
-          </div>
+          {content.favorites.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {content.favorites.map(item => (
+                <FavoriteCard key={item._id} item={item} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState type="favorites" />
+          )}
         </div>
       )}
     </div>
