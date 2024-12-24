@@ -18,7 +18,7 @@ const Layout = () => {
           backgroundRepeat: 'no-repeat',
         }}
       />
-      {/* Overlay untuk memberikan efek transparan */}
+      {/* Overlay for give efek transparan */}
       <div 
         className="fixed inset-0 z-0 bg-blue-50 bg-opacity-85"
         aria-hidden="true"
