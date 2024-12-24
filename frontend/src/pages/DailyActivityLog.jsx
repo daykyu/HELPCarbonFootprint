@@ -162,7 +162,7 @@ const DailyActivityLog = () => {
           <div 
             className={`px-4 py-2 rounded-full text-sm font-medium ${
               activityStatus === 'updated'
-                ? 'bg-green-100 text-green-800'
+                ? 'bg-indigo-100 text-indigo-800'
                 : 'bg-orange-100 text-orange-800'
             }`}
             data-testid="activity-status"
@@ -319,7 +319,7 @@ const DailyActivityLog = () => {
           <button
   type="submit"
   data-testid="activity-submit"
-  className="block mx-auto w-40 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
+  className="block mx-auto w-40 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 transition-colors"
 >
   Save Activity Log
 </button>
@@ -356,8 +356,8 @@ const DailyActivityLog = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="confirmation-modal">
           <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-4">
-                <svg className="h-10 w-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-indigo-100 mb-4">
+                <svg className="h-10 w-10 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>

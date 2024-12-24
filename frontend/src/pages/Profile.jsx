@@ -387,7 +387,7 @@ const Profile = () => {
             <button
               type="submit"
               data-testid="profile-submit"
-              className="block mx-auto w-40 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
+              className="block mx-auto w-40 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 transition-colors"
             >
               Update Profile
             </button>

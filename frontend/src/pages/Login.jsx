@@ -104,7 +104,7 @@ const Login = () => {
                 type="email"
                 id="email"
                 required
-                placeholder="user123@gmail.com"
+                placeholder="Enter your email"
                 data-testid="login-email-input"
                 className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
@@ -122,7 +122,7 @@ const Login = () => {
                 type="password"
                 id="password"
                 required
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 data-testid="login-password-input"
                 className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg 
                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
@@ -160,7 +160,7 @@ const Login = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 mb-4 text-sm text-gray-700">
+        <div className="text-center mt-8 mb-4 text-sm ">
           Copyright © 2024 | All Rights Reserved<br />
           Developed by HELP University x STIKOM Students for BIT216 - Software Engineering Principles
         </div>

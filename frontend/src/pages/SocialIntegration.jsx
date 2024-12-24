@@ -276,6 +276,7 @@ const SocialIntegration = () => {
           </div>
         </div>
       </div>
+      
 
       {/* Chat Window Component */}
       <ChatWindow 
@@ -294,6 +295,7 @@ const SocialIntegration = () => {
       {/* Achievement Modal */}
       {showAchievement && <AchievementModal />}
     </div>
+    
   );
 };
 

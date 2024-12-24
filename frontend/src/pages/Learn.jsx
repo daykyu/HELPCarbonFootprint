@@ -194,7 +194,7 @@ const Learn = () => {
 
       {/* Main Content Section */}
       <div className="mb-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <h2 className="text-xl font-semibold text-indigo-900 mb-4">
           {activeCategory === 'all' 
             ? 'Recommended Content' 
             : `Recommended ${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}`}
@@ -211,7 +211,7 @@ const Learn = () => {
       {/* Favorites Content - Only show on 'all' category */}
       {activeCategory === 'all' && content.favorites.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">My Favorite Content</h2>
+          <h2 className="text-xl font-semibold text-indigo-900 mb-4">My Favorite Content</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {content.favorites.map(item => (
               <FavoriteCard key={item._id} item={item} />

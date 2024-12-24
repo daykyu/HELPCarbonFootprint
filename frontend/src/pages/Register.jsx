@@ -244,7 +244,7 @@ const Register = () => {
       </div>
 
       {/* Footer with proper spacing */}
-      <div className="relative z-10 pb-8 pt-4 text-center text-sm text-gray-500">
+      <div className="relative z-10 pb-8 pt-4 text-center text-sm ">
         Copyright © 2024 | All Rights Reserved<br />
         Developed by HELP University x STIKOM Students for BIT216 - Software Engineering Principles
       </div>
