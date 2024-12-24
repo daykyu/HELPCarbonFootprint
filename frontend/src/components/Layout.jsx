@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import bgImage from '../assets/bg.jpg'; // Pastikan path sesuai dengan struktur folder Anda
+import bgImage from '../assets/bg.jpg'; 
 
 const Layout = () => {
   const [isExpanded, setIsExpanded] = useState(true);

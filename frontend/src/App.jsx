@@ -9,10 +9,12 @@ import DailyActivityLog from './pages/DailyActivityLog';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
-import Educational from './pages/admin/EducationalContent';
+import PublishedContent from './pages/admin/PublishedContent';
+import UploadContent from './pages/admin/UploadContent';
 import Recommendations from './pages/Recommendations';
 import SocialIntegration from './pages/SocialIntegration';
 import Layout from './components/Layout';
+import EditContent from './pages/admin/EditContent';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -35,7 +37,9 @@ function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="educational" element={<Educational />} />
+        <Route path="educational" element={<PublishedContent />} />
+        <Route path="educational/upload" element={<UploadContent />} />
+        <Route path="educational/edit/:id" element={<EditContent />} /> {/* Add this line */}
       </Route>
 
       {/* Protected user routes */}
