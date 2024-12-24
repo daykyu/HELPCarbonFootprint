@@ -8,7 +8,7 @@ const Layout = () => {
 
   return (
     <div className="flex min-h-screen relative">
-      {/* Background Image dengan Overlay */}
+      {/* Background Image with Overlay */}
       <div 
         className="fixed inset-0 z-0" 
         style={{
