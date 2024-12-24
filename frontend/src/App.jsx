@@ -15,6 +15,7 @@ import Recommendations from './pages/Recommendations';
 import SocialIntegration from './pages/SocialIntegration';
 import Layout from './components/Layout';
 import EditContent from './pages/admin/EditContent';
+import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -40,6 +41,7 @@ function App() {
         <Route path="educational" element={<PublishedContent />} />
         <Route path="educational/upload" element={<UploadContent />} />
         <Route path="educational/edit/:id" element={<EditContent />} /> {/* Add this line */}
+        <Route path="Settings" element={<AdminSettings />} />
       </Route>
 
       {/* Protected user routes */}

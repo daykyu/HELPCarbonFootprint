@@ -14,6 +14,7 @@ const activityRoutes = require('./routes/activityRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const contentRoutes = require('./routes/contentRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 
@@ -47,7 +48,8 @@ const uploadDirs = [
   path.join(__dirname, 'uploads'),
   path.join(__dirname, 'uploads/educational-content'),
   path.join(__dirname, 'uploads/thumbnails'),
-  path.join(__dirname, 'uploads/temp')
+  path.join(__dirname, 'uploads/temp'),
+  path.join(__dirname, 'uploads/profile')
 ];
 
 uploadDirs.forEach(dir => {
@@ -91,6 +93,9 @@ app.use('/api/activities', dashboardRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/content', contentRoutes);
+// Add routes setup
+app.use('/api/admin/settings', settingsRoutes);
+
 
 // Base route
 app.get('/', (req, res) => {
@@ -152,3 +157,9 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Upload directories initialized');
 });
+
+
+
+
+
+
