@@ -13,9 +13,13 @@ import PublishedContent from './pages/admin/PublishedContent';
 import UploadContent from './pages/admin/UploadContent';
 import Recommendations from './pages/Recommendations';
 import SocialIntegration from './pages/SocialIntegration';
+import HistoricalTracking from './pages/HistoricalTracking';
+import Learn from './pages/Learn';
 import Layout from './components/Layout';
 import EditContent from './pages/admin/EditContent';
 import AdminSettings from './pages/admin/AdminSettings';
+import ContentDetail from './components/ContentDetail';
+
 
 function App() {
   const token = localStorage.getItem('token');
@@ -40,7 +44,7 @@ function App() {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="educational" element={<PublishedContent />} />
         <Route path="educational/upload" element={<UploadContent />} />
-        <Route path="educational/edit/:id" element={<EditContent />} /> {/* Add this line */}
+        <Route path="educational/edit/:id" element={<EditContent />} />
         <Route path="Settings" element={<AdminSettings />} />
       </Route>
 
@@ -58,6 +62,9 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="recommendations" element={<Recommendations />} />
         <Route path="social" element={<SocialIntegration />} />
+        <Route path="history" element={<HistoricalTracking />} />
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/learn/:id" element={<ContentDetail />} />
         <Route 
           index 
           element={

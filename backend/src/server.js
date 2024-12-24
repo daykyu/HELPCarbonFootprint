@@ -7,19 +7,20 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const compression = require('compression');
 const User = require('./models/User');
 const connectDB = require('./config/db');
+
+// Import routes
 const userRoutes = require('./routes/userRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const contentRoutes = require('./routes/contentRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const historicalRoutes = require('./routes/historicalRoutes');
 
 const app = express();
-
-// Connect to MongoDB
-connectDB();
 
 // Create default admin user
 const createDefaultAdmin = async () => {
@@ -41,9 +42,7 @@ const createDefaultAdmin = async () => {
   }
 };
 
-createDefaultAdmin();
-
-// Create upload directories if they don't exist
+// Inisialisasi direktori upload
 const uploadDirs = [
   path.join(__dirname, 'uploads'),
   path.join(__dirname, 'uploads/educational-content'),
@@ -52,39 +51,36 @@ const uploadDirs = [
   path.join(__dirname, 'uploads/profile')
 ];
 
-uploadDirs.forEach(dir => {
-  if (!require('fs').existsSync(dir)) {
-    require('fs').mkdirSync(dir, { recursive: true });
-    console.log(`Created directory: ${dir}`);
-  }
-});
+const initializeUploadDirs = () => {
+  uploadDirs.forEach(dir => {
+    if (!require('fs').existsSync(dir)) {
+      require('fs').mkdirSync(dir, { recursive: true });
+      console.log(`Created directory: ${dir}`);
+    }
+  });
+};
 
-// Security middleware
+// Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+app.use(compression());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(morgan('dev'));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100
 });
 app.use('/api/', limiter);
 
-// Middleware
-app.use(cors({
-  origin: 'http://localhost:5173', // Adjust according to your frontend port
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev')); // Logging
-
-// Increase payload size limit for file uploads
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// Serve static files
+// Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
@@ -93,30 +89,24 @@ app.use('/api/activities', dashboardRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/content', contentRoutes);
-// Add routes setup
 app.use('/api/admin/settings', settingsRoutes);
+app.use('/api/historical', historicalRoutes);
 
-
-// Base route
 app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to the API'
-  });
+  res.json({ message: 'Welcome to the API' });
 });
 
-// 404 handler
-app.use((req, res, next) => {
+// Error handlers
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: 'Route not found'
   });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   
-  // Delete uploaded files if there's an error during file upload
   if (req.files) {
     Object.values(req.files).forEach(files => {
       files.forEach(file => {
@@ -134,32 +124,42 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Handle unhandled promise rejections
+// Initialize server
+const PORT = process.env.PORT || 5000;
+const startServer = async () => {
+  try {
+    // Connect to MongoDB first
+    await connectDB();
+    console.log('MongoDB connected successfully');
+
+    // Create upload directories
+    initializeUploadDirs();
+
+    // Create default admin after DB connection
+    await createDefaultAdmin();
+
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+// Start server
+startServer();
+
+// Handle errors
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...');
   console.error('Error:', err);
-  
-  // Close server & exit process
-  app.close(() => {
-    process.exit(1);
-  });
+  process.exit(1);
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
   console.error('Error:', err);
   process.exit(1);
 });
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('Upload directories initialized');
-});
-
-
-
-
-
-

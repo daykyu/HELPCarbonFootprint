@@ -66,8 +66,10 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
     navigate('/login');
   };
+
   const Logo = () => (
     <div className="relative flex items-center h-16 px-4">
       <div className="flex items-center">
@@ -87,7 +89,6 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
     </div>
   );
   
-  // Toggle Button Component
   const ToggleButton = () => (
     <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center">
       <div className="relative">
@@ -125,6 +126,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="text-white p-4"
+            data-testid="mobile-menu-button"
           >
             <Menu size={24} />
           </button>
@@ -140,6 +142,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
                 <Link
                   key={index}
                   to={item.path}
+                  data-testid={item.testId}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`
                     flex items-center px-4 py-3 text-gray-300 

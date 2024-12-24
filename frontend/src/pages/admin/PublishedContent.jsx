@@ -156,22 +156,21 @@ const PublishedContent = () => {
                   className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors"
                   data-testid={`content-item-${item._id}`}
                 >
-                  <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="h-16 w-16 bg-gray-100 rounded-lg overflow-hidden">
                     <img 
                       src={`http://localhost:5000${item.thumbnailUrl}`}
                       alt={item.title}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.description}</p>
-                    <p className="text-sm text-gray-500 mt-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 truncate">{item.title}</h3>
+                    <p className="text-sm text-gray-500 mt-1">
                       {item.category.charAt(0).toUpperCase() + item.category.slice(1)} • 
                       Published on {new Date(item.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 flex-shrink-0">
                     <button
                       onClick={() => navigate(`/admin/educational/edit/${item._id}`)}
                       className="px-3 py-1 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"

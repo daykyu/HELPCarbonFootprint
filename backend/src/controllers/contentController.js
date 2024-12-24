@@ -2,9 +2,94 @@ const Content = require('../models/Content');
 const fs = require('fs').promises;
 const path = require('path');
 
+// Get all content with filters
+exports.getAllContent = async (req, res) => {
+  try {
+    const { search, category, sortBy = 'newest', page = 1, limit = 10 } = req.query;
+    const query = {};
+    
+    if (category) query.category = category;
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // If not admin and accessing public route, show only published
+    if (!req.userRole || req.userRole !== 'admin') {
+      query.status = 'published';
+    }
+
+    const sortOptions = {
+      newest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+      title: { title: 1 },
+      popular: { views: -1 }
+    };
+
+    const skip = (page - 1) * limit;
+    const total = await Content.countDocuments(query);
+    
+    const content = await Content.find(query)
+      .sort(sortOptions[sortBy] || { featured: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('createdBy', 'username');
+
+    res.json({
+      success: true,
+      data: content,
+      pagination: {
+        total,
+        page: parseInt(page),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get single content by ID
+exports.getContent = async (req, res) => {
+  try {
+    const content = await Content.findById(req.params.id)
+      .populate('createdBy', 'username');
+
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        message: 'Content not found'
+      });
+    }
+
+    // Increment views for non-admin access
+    if (!req.userRole || req.userRole !== 'admin') {
+      content.views += 1;
+      content.lastViewedAt = new Date();
+      await content.save();
+    }
+
+    res.json({
+      success: true,
+      data: content
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Upload new content
 exports.uploadContent = async (req, res) => {
   try {
-    const { title, category, description } = req.body;
+    const { title, category, description, featured = false } = req.body;
     const contentFile = req.files.file[0];
     const thumbnailFile = req.files.thumbnail[0];
 
@@ -19,12 +104,14 @@ exports.uploadContent = async (req, res) => {
       title,
       category,
       description,
+      featured: featured === 'true',
       fileUrl: `/uploads/educational-content/${contentFile.filename}`,
       thumbnailUrl: `/uploads/thumbnails/${thumbnailFile.filename}`,
       fileName: contentFile.originalname,
       fileType: contentFile.mimetype,
       fileSize: contentFile.size,
-      createdBy: req.userId
+      createdBy: req.userId,
+      status: 'published'
     });
 
     res.status(201).json({
@@ -47,74 +134,7 @@ exports.uploadContent = async (req, res) => {
   }
 };
 
-exports.getAllContent = async (req, res) => {
-  try {
-    const { search, category, sortBy = 'newest', page = 1, limit = 10 } = req.query;
-    const query = {};
-    
-    if (category) query.category = category;
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    const sortOptions = {
-      newest: { createdAt: -1 },
-      oldest: { createdAt: 1 },
-      title: { title: 1 }
-    };
-
-    const skip = (page - 1) * limit;
-    const total = await Content.countDocuments(query);
-    const content = await Content.find(query)
-      .sort(sortOptions[sortBy] || sortOptions.newest)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .populate('createdBy', 'username');
-
-    res.json({
-      success: true,
-      data: content,
-      pagination: {
-        total,
-        page: parseInt(page),
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-
-exports.getContent = async (req, res) => {
-  try {
-    const content = await Content.findById(req.params.id)
-      .populate('createdBy', 'username');
-
-    if (!content) {
-      return res.status(404).json({
-        success: false,
-        message: 'Content not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: content
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-
+// Update existing content
 exports.updateContent = async (req, res) => {
   try {
     const content = await Content.findById(req.params.id);
@@ -125,9 +145,8 @@ exports.updateContent = async (req, res) => {
       });
     }
 
-    // Handle file updates if new files are uploaded
+    // Handle file updates
     if (req.files?.file) {
-      // Delete old content file
       const oldFilePath = path.join(__dirname, '..', content.fileUrl);
       await fs.unlink(oldFilePath).catch(console.error);
       
@@ -138,7 +157,6 @@ exports.updateContent = async (req, res) => {
     }
 
     if (req.files?.thumbnail) {
-      // Delete old thumbnail
       const oldThumbnailPath = path.join(__dirname, '..', content.thumbnailUrl);
       await fs.unlink(oldThumbnailPath).catch(console.error);
       
@@ -146,9 +164,10 @@ exports.updateContent = async (req, res) => {
     }
 
     // Update other fields
-    Object.keys(req.body).forEach(key => {
-      if (key !== 'fileUrl' && key !== 'thumbnailUrl') {
-        content[key] = req.body[key];
+    const allowedUpdates = ['title', 'description', 'featured', 'status', 'category'];
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        content[field] = req.body[field];
       }
     });
 
@@ -166,6 +185,7 @@ exports.updateContent = async (req, res) => {
   }
 };
 
+// Delete content
 exports.deleteContent = async (req, res) => {
   try {
     const content = await Content.findById(req.params.id);
@@ -199,6 +219,7 @@ exports.deleteContent = async (req, res) => {
   }
 };
 
+// Toggle favorite status
 exports.toggleFavorite = async (req, res) => {
   try {
     const content = await Content.findById(req.params.id);
@@ -221,6 +242,26 @@ exports.toggleFavorite = async (req, res) => {
     res.json({
       success: true,
       isFavorited: index === -1
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get favorite content
+exports.getFavoriteContent = async (req, res) => {
+  try {
+    const content = await Content.find({
+      favorites: req.userId,
+      status: 'published'
+    }).populate('createdBy', 'username');
+
+    res.json({
+      success: true,
+      data: content
     });
   } catch (error) {
     res.status(500).json({

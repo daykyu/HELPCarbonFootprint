@@ -26,6 +26,20 @@ const contentSchema = new mongoose.Schema({
   fileName: String,
   fileType: String,
   fileSize: Number,
+  featured: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'archived'],
+    default: 'published'
+  },
+  views: {
+    type: Number,
+    default: 0
+  },
+  lastViewedAt: Date,
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -34,24 +48,15 @@ const contentSchema = new mongoose.Schema({
   favorites: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }],
-  status: {
-    type: String,
-    enum: ['draft', 'published'],
-    default: 'published'
-  },
-  views: {
-    type: Number,
-    default: 0
-  }
+  }]
 }, {
   timestamps: true
 });
 
-// Add indexes for better query performance
+// Indexes for better query performance
 contentSchema.index({ title: 'text', description: 'text' });
-contentSchema.index({ category: 1 });
+contentSchema.index({ category: 1, status: 1 });
 contentSchema.index({ createdAt: -1 });
-contentSchema.index({ status: 1 });
+contentSchema.index({ featured: -1 });
 
 module.exports = mongoose.model('Content', contentSchema);
