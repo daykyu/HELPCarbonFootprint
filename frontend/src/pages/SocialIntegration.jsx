@@ -675,7 +675,7 @@ const handleSendMessage = (e) => {
       </div>
     </div>
 
-      <ChatWindow 
+      {/* <ChatWindow 
         showChat={showChat}
         setShowChat={setShowChat}
         selectedChat={selectedChat}
@@ -686,7 +686,7 @@ const handleSendMessage = (e) => {
         setChatMessage={setChatMessage}
         notifications={notifications}
         handleSendMessage={handleSendMessage}
-      />
+      /> */}
       
       {showAchievement && <AchievementModal />}
       

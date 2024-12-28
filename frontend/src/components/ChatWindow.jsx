@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, MessageSquare, Send, X, ChevronUp } from 'lucide-react';
+import { useSocket } from '../contexts/SocketContext'; // Pastikan path sesuai
 
 const ChatWindow = ({ 
   showChat, 
@@ -11,8 +12,39 @@ const ChatWindow = ({
   chatMessage,
   setChatMessage,
   notifications,
-  handleSendMessage 
+  handleSendMessage,
+  onlineUsers
 }) => {
+  // Tambahkan state untuk koneksi dan error
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [socketError, setSocketError] = useState(null);
+  const { socket, isConnected } = useSocket(); // Gunakan useSocket hook
+
+  // Effect untuk menghandle status koneksi
+  useEffect(() => {
+    if (!socket) {
+      setIsConnecting(true);
+      return;
+    }
+
+    setIsConnecting(false);
+
+    socket.on('connect_error', (error) => {
+      setSocketError('Failed to connect to chat server');
+      setIsConnecting(false);
+    });
+
+    socket.on('connect', () => {
+      setSocketError(null);
+      setIsConnecting(false);
+    });
+
+    return () => {
+      socket.off('connect_error');
+      socket.off('connect');
+    };
+  }, [socket]);
+
   return (
     <div className={`fixed bottom-0 right-4 ${showChat ? 'w-96' : 'w-80'} bg-white rounded-t-lg shadow-2xl z-40 
                     transition-all duration-300 flex flex-col`}
@@ -65,24 +97,40 @@ const ChatWindow = ({
           )}
         </button>
       </div>
+ {isConnecting && (
+        <div className="flex items-center justify-center p-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+          <span className="ml-2 text-gray-600">Connecting to chat...</span>
+        </div>
+      )}
+
+      {socketError && (
+        <div className="p-4 bg-red-50 text-red-600">
+          {socketError}
+        </div>
+      )}
 
       {showChat && (
         <div className="flex-1 flex flex-col">
           {!selectedChat ? (
             // Chat List View
             <div className="flex-1 overflow-y-auto divide-y" data-testid="chat-list">
-              {chatList.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => setSelectedChat(chat)}
-                  className="flex items-center space-x-3 p-4 hover:bg-gray-50 cursor-pointer"
-                  data-testid={`chat-list-item-${chat.id}`}
-                >
+            {chatList.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => setSelectedChat(chat)}
+                className="flex items-center space-x-3 p-4 hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="relative">
                   <img 
                     src={chat.profilePic}
                     alt={chat.name}
                     className="w-12 h-12 rounded"
                   />
+                  {onlineUsers.has(chat.id) && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                  )}
+                </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <span className="font-medium text-gray-900 truncate">{chat.name}</span>
