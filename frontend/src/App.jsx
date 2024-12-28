@@ -18,8 +18,8 @@ function App() {
   const isRegistered = localStorage.getItem('token');
 
   return (
-    <SocketProvider>
     <NotificationProvider>
+      <SocketProvider>
     <Routes>
       {/* Public routes */}
       <Route path="/register" element={<Register />} />
@@ -58,8 +58,8 @@ function App() {
         }
       />
     </Routes>
-    </NotificationProvider>
     </SocketProvider>
+    </NotificationProvider>
   );
 }
 

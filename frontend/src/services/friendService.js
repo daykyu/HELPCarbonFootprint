@@ -79,3 +79,17 @@ export const respondToFriendRequest = async (requestId, status) => {
       throw error;
     }
   };
+
+  // Tambahkan fungsi ini ke file friendService yang sudah ada
+export const getFriendsList = async () => {
+  try {
+    console.log('Making API request to get friends list');
+    const response = await api.get('/friends/list');
+    console.log('API response:', response);
+    return response.data;
+  } catch (error) {
+    console.error('Service error:', error);
+    throw error;
+  }
+};
+

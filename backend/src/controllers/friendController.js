@@ -198,3 +198,63 @@ exports.getPendingRequests = async (req, res) => {
     }
   };
   
+// backend/src/controllers/friendController.js
+exports.getFriendsList = async (req, res) => {
+  try {
+      const userId = req.userId;
+      
+      // Cari user dan populate field friends
+      const user = await User.findById(userId)
+          .populate('friends', 'username email _id');
+      
+      if (!user) {
+          return res.status(404).json({
+              success: false,
+              message: 'User not found'
+          });
+      }
+
+      // Jika friends array belum ada, inisialisasi sebagai array kosong
+      const friendsList = user.friends || [];
+
+      return res.status(200).json({
+          success: true,
+          friends: friendsList
+      });
+  } catch (error) {
+      console.error('Error in getFriendsList:', error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error fetching friends list',
+          error: error.message
+      });
+  }
+};
+
+// Tambahkan juga fungsi untuk menghapus teman (opsional)
+exports.removeFriend = async (req, res) => {
+  try {
+      const userId = req.userId;
+      const { friendId } = req.params;
+
+      // Update kedua user untuk menghapus dari daftar teman
+      await User.findByIdAndUpdate(userId, {
+          $pull: { friends: friendId }
+      });
+      await User.findByIdAndUpdate(friendId, {
+          $pull: { friends: userId }
+      });
+
+      return res.status(200).json({
+          success: true,
+          message: 'Friend removed successfully'
+      });
+  } catch (error) {
+      console.error('Error in removeFriend:', error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error removing friend',
+          error: error.message
+      });
+  }
+};

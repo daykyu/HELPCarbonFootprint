@@ -4,6 +4,7 @@ import ChatWindow from '../components/ChatWindow';
 import { sendFriendRequest, getPendingRequests, respondToFriendRequest } from '../services/friendService';
 import {useNotification} from '../components/NotificationContext';
 import { useSocket } from '../contexts/SocketContext';
+import { SocketProvider } from '../contexts/SocketContext';
 
 const SocialIntegration = () => {
   const [email, setEmail] = useState('');
@@ -20,6 +21,7 @@ const SocialIntegration = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const { socket } = useSocket();
+  const [friendsList, setFriendsList] = useState([]);
   const [messages, setMessages] = useState({});
   const [isConnecting, setIsConnecting] = useState(true);
   const [socketError, setSocketError] = useState(null);
@@ -97,6 +99,40 @@ const handleDisconnectAccount = (platform) => {
   localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
 };
 
+const getFriendsList = async () => {
+  try {
+    const response = await fetch('/api/friends/list', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message);
+    }
+    
+    // Transform data teman menjadi format yang sesuai untuk chat
+    const formattedFriends = data.friends.map(friend => ({
+      id: friend._id,
+      name: friend.username,
+      lastMessage: '', // Akan diupdate saat ada pesan
+      timestamp: '', // Akan diupdate saat ada pesan
+      unread: 0,
+      profilePic: friend.profilePic || '/src/assets/default-avatar.png'
+    }));
+    
+    setFriendsList(formattedFriends);
+  } catch (error) {
+    console.error('Error fetching friends list:', error);
+    setError('Failed to load friends list');
+  }
+};
+
+useEffect(() => {
+  getFriendsList();
+}, []);
+
 useEffect(() => {
   const loadPendingRequests = async () => {
     try {
@@ -132,12 +168,17 @@ const handleRespondToRequest = async (requestId, status) => {
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to respond to friend request');
+      throw new Error(data.message);
     }
 
-    // Refresh pending requests setelah berhasil
+    // Refresh friend requests
     const updatedRequests = await getPendingRequests();
     setPendingRequests(updatedRequests.requests || []);
+    
+    // Refresh friends list jika request diterima
+    if (status === 'accepted') {
+      getFriendsList();
+    }
     
     setNotification({
       type: 'success',
@@ -151,6 +192,7 @@ const handleRespondToRequest = async (requestId, status) => {
   }
 };
 
+
   // Achievement data yang akan dishare
   const achievementData = {
     title: "Achievement Unlocked!",
@@ -159,33 +201,33 @@ const handleRespondToRequest = async (requestId, status) => {
     shareUrl: window.location.href
   };
 
-  const chatList = [
-    {
-      id: 1,
-      name: 'Citra Azrill Andriana',
-      lastMessage: 'Hey!',
-      timestamp: '2 min ago',
-      unread: 1,
-      profilePic: '/src/assets/Profile.png'
-    },
-    {
-      id: 2,
-      name: 'Sri Cantik',
-      lastMessage: 'How are you?',
-      timestamp: '5 min ago',
-      unread: 0,
-      profilePic: '/src/assets/Profile4.png'
-    }
-  ];
+  // const chatList = [
+  //   {
+  //     id: 1,
+  //     name: 'Citra Azrill Andriana',
+  //     lastMessage: 'Hey!',
+  //     timestamp: '2 min ago',
+  //     unread: 1,
+  //     profilePic: '/src/assets/Profile.png'
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Sri Cantik',
+  //     lastMessage: 'How are you?',
+  //     timestamp: '5 min ago',
+  //     unread: 0,
+  //     profilePic: '/src/assets/Profile4.png'
+  //   }
+  // ];
 
-  const chatMessages = [
-    {
-      id: 1,
-      senderId: 1,
-      text: 'Hey!',
-      timestamp: '2 min ago'
-    }
-  ];
+  // const chatMessages = [
+  //   {
+  //     id: 1,
+  //     senderId: 1,
+  //     text: 'Hey!',
+  //     timestamp: '2 min ago'
+  //   }
+  // ];
 
   const activities = [
     {
@@ -363,21 +405,25 @@ useEffect(() => {
 useEffect(() => {
   if (!socket) return;
 
-  // Listen for incoming private messages
   socket.on('private message', ({ content, from, timestamp }) => {
+    // Update messages
     setMessages(prev => ({
       ...prev,
       [from]: [...(prev[from] || []), { content, from, timestamp }]
     }));
     
-    // Update unread count in chatList if chat is not selected
-    if (!selectedChat || selectedChat.id !== from) {
-      setChatList(prev => prev.map(chat => 
-        chat.id === from 
-          ? { ...chat, unread: (chat.unread || 0) + 1 }
-          : chat
-      ));
-    }
+    // Update friendsList dengan pesan terakhir
+    setFriendsList(prev => prev.map(friend => {
+      if (friend.id === from) {
+        return {
+          ...friend,
+          lastMessage: content,
+          timestamp: new Date(timestamp).toLocaleTimeString(),
+          unread: selectedChat?.id !== from ? (friend.unread || 0) + 1 : 0
+        };
+      }
+      return friend;
+    }));
   });
 
   return () => {
@@ -385,31 +431,47 @@ useEffect(() => {
   };
 }, [socket, selectedChat]);
 
+
 // Update handleSendMessage:
 const handleSendMessage = (e) => {
   e.preventDefault();
   if (!socket || !chatMessage.trim() || !selectedChat) return;
 
+  const timestamp = new Date().toISOString();
   const messageData = {
     content: chatMessage,
     to: selectedChat.id,
-    from: currentUserId // Pastikan Anda memiliki currentUserId dari auth state
+    from: socket.id,
+    timestamp
   };
 
   socket.emit('private message', messageData);
 
-  // Update local messages
+  // Update messages
   setMessages(prev => ({
     ...prev,
     [selectedChat.id]: [...(prev[selectedChat.id] || []), {
       content: chatMessage,
-      from: currentUserId,
-      timestamp: new Date().toISOString()
+      from: socket.id,
+      timestamp
     }]
+  }));
+
+  // Update friendsList dengan pesan terakhir
+  setFriendsList(prev => prev.map(friend => {
+    if (friend.id === selectedChat.id) {
+      return {
+        ...friend,
+        lastMessage: chatMessage,
+        timestamp: new Date(timestamp).toLocaleTimeString()
+      };
+    }
+    return friend;
   }));
 
   setChatMessage('');
 };
+
 
   const AchievementModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="achievement-modal">
@@ -674,19 +736,22 @@ const handleSendMessage = (e) => {
         </div>
       </div>
     </div>
+      
+    <SocketProvider>
+<ChatWindow 
+  showChat={showChat}
+  setShowChat={setShowChat}
+  selectedChat={selectedChat}
+  setSelectedChat={setSelectedChat}
+  chatList={friendsList} // Gunakan friendsList sebagai gantinya
+  chatMessages={messages[selectedChat?.id] || []}
+  chatMessage={chatMessage}
+  setChatMessage={setChatMessage}
+  notifications={notifications}
+  handleSendMessage={handleSendMessage}
+/>
 
-      {/* <ChatWindow 
-        showChat={showChat}
-        setShowChat={setShowChat}
-        selectedChat={selectedChat}
-        setSelectedChat={setSelectedChat}
-        chatList={chatList}
-        chatMessages={chatMessages}
-        chatMessage={chatMessage}
-        setChatMessage={setChatMessage}
-        notifications={notifications}
-        handleSendMessage={handleSendMessage}
-      /> */}
+      </SocketProvider>
       
       {showAchievement && <AchievementModal />}
       

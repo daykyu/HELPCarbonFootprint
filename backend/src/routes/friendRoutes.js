@@ -10,5 +10,8 @@ router.use(auth);
 router.post('/send-request', friendController.sendFriendRequest);
 router.get('/pending-requests', auth, friendController.getPendingRequests);
 router.put('/request/:requestId', friendController.respondToFriendRequest);
+// Route baru
+router.get('/list', friendController.getFriendsList);
+router.delete('/remove/:friendId', friendController.removeFriend);
 
 module.exports = router;
