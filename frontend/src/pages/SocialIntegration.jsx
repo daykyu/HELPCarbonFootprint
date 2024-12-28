@@ -1,6 +1,9 @@
 import React, { useState,useEffect } from 'react';
 import { Share2, X, Download, Check, Link,LogOut } from 'lucide-react';
 import ChatWindow from '../components/ChatWindow';
+import { sendFriendRequest, getPendingRequests, respondToFriendRequest } from '../services/friendService';
+import {useNotification} from '../components/NotificationContext';
+import { useSocket } from '../contexts/SocketContext';
 
 const SocialIntegration = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +14,15 @@ const SocialIntegration = () => {
   const [notifications] = useState(1);
   const [isSharing, setIsSharing] = useState(false);
   const [shareNotification, setShareNotification] = useState({ show: false, message: '' });
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setNotification } = useNotification();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { socket } = useSocket();
+  const [messages, setMessages] = useState({});
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [socketError, setSocketError] = useState(null);
 
   // connect social media state
   const [connectedAccounts, setConnectedAccounts] = useState({
@@ -85,6 +97,59 @@ const handleDisconnectAccount = (platform) => {
   localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
 };
 
+useEffect(() => {
+  const loadPendingRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await getPendingRequests();
+      setPendingRequests(response.requests || []);
+    } catch (err) {
+      setError(err.message);
+      console.error('Failed to load pending requests:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  loadPendingRequests();
+  
+  // Refresh setiap 30 detik
+  const interval = setInterval(loadPendingRequests, 30000);
+  return () => clearInterval(interval);
+}, []);
+
+const handleRespondToRequest = async (requestId, status) => {
+  try {
+    const response = await fetch(`/api/friends/request/${requestId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to respond to friend request');
+    }
+
+    // Refresh pending requests setelah berhasil
+    const updatedRequests = await getPendingRequests();
+    setPendingRequests(updatedRequests.requests || []);
+    
+    setNotification({
+      type: 'success',
+      message: data.message || `Friend request ${status} successfully`
+    });
+  } catch (error) {
+    setNotification({
+      type: 'error',
+      message: error.message || `Failed to ${status} friend request`
+    });
+  }
+};
 
   // Achievement data yang akan dishare
   const achievementData = {
@@ -248,15 +313,103 @@ const handleDisconnectAccount = (platform) => {
       setShareNotification({ show: false, message: '' });
     }, 3000);
   };
-  const handleSendInvite = (e) => {
-    e.preventDefault();
+// Update handleSendInvite
+const handleSendInvite = async (e) => {
+  e.preventDefault();
+  if (!email) return;
+  
+  setIsSubmitting(true);
+  try {
+    await sendFriendRequest(email);
+    setNotification({
+      type: 'success',
+      message: 'Friend request sent successfully!'
+    });
     setEmail('');
+    
+    // Refresh pending requests
+    const updatedRequests = await getPendingRequests();
+    setPendingRequests(updatedRequests.requests || []);
+  } catch (error) {
+    setNotification({
+      type: 'error',
+      message: error.message || 'Error sending friend request'
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+useEffect(() => {
+  if (!socket) return;
+
+  socket.on('connect', () => {
+    setIsConnecting(false);
+    setSocketError(null);
+  });
+
+  socket.on('connect_error', (error) => {
+    setIsConnecting(false);
+    setSocketError('Failed to connect to chat server');
+    console.error('Socket connection error:', error);
+  });
+
+  return () => {
+    socket.off('connect');
+    socket.off('connect_error');
+  };
+}, [socket]);
+
+useEffect(() => {
+  if (!socket) return;
+
+  // Listen for incoming private messages
+  socket.on('private message', ({ content, from, timestamp }) => {
+    setMessages(prev => ({
+      ...prev,
+      [from]: [...(prev[from] || []), { content, from, timestamp }]
+    }));
+    
+    // Update unread count in chatList if chat is not selected
+    if (!selectedChat || selectedChat.id !== from) {
+      setChatList(prev => prev.map(chat => 
+        chat.id === from 
+          ? { ...chat, unread: (chat.unread || 0) + 1 }
+          : chat
+      ));
+    }
+  });
+
+  return () => {
+    socket.off('private message');
+  };
+}, [socket, selectedChat]);
+
+// Update handleSendMessage:
+const handleSendMessage = (e) => {
+  e.preventDefault();
+  if (!socket || !chatMessage.trim() || !selectedChat) return;
+
+  const messageData = {
+    content: chatMessage,
+    to: selectedChat.id,
+    from: currentUserId // Pastikan Anda memiliki currentUserId dari auth state
   };
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    setChatMessage('');
-  };
+  socket.emit('private message', messageData);
+
+  // Update local messages
+  setMessages(prev => ({
+    ...prev,
+    [selectedChat.id]: [...(prev[selectedChat.id] || []), {
+      content: chatMessage,
+      from: currentUserId,
+      timestamp: new Date().toISOString()
+    }]
+  }));
+
+  setChatMessage('');
+};
 
   const AchievementModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="achievement-modal">
@@ -409,16 +562,64 @@ const handleDisconnectAccount = (platform) => {
                        placeholder-gray-400"
               data-testid="friend-email-input"
             />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-indigo-900 text-white rounded-lg hover:bg-indigo-800 
-                       transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 
-                       focus:ring-indigo-500 shadow-md hover:shadow-lg"
-              data-testid="send-invite-button"
-            >
-              Send
-            </button>
+<button
+  type="submit"
+  disabled={isSubmitting || !email}
+  className={`px-6 py-2 ${
+    isSubmitting || !email 
+      ? 'bg-gray-400 cursor-not-allowed' 
+      : 'bg-indigo-900 hover:bg-indigo-800'
+  } text-white rounded-lg transition-colors focus:outline-none focus:ring-2 
+    focus:ring-offset-2 focus:ring-indigo-500 shadow-md hover:shadow-lg`}
+  data-testid="send-invite-button"
+>
+  {isSubmitting ? 'Sending...' : 'Send'}
+</button>
           </form>
+          {/* info pending requests */}
+          <div className="mt-6">
+  <h3 className="text-lg font-medium mb-4">Pending Friend Requests</h3>
+  {loading ? (
+    <div className="flex items-center justify-center p-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-900"></div>
+    </div>
+  ) : error ? (
+    <div className="text-red-500 p-4 bg-red-50 rounded-lg">
+      <p>Error: {error}</p>
+    </div>
+  ) : pendingRequests.length === 0 ? (
+    <p className="text-gray-500">No pending friend requests</p>
+  ) : (
+    <div className="space-y-4">
+{pendingRequests.map((request) => (
+  <div key={request._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+    <div>
+      <p className="font-medium">
+        {request.sender?.username || request.sender?.email || 'Unknown User'}
+      </p>
+      <p className="text-sm text-gray-500">
+        Sent {new Date(request.createdAt).toLocaleDateString()}
+      </p>
+    </div>
+    <div className="space-x-2">
+      <button
+        onClick={() => handleRespondToRequest(request._id, 'accepted')}
+        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+      >
+        Accept
+      </button>
+      <button
+        onClick={() => handleRespondToRequest(request._id, 'rejected')}
+        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+      >
+        Reject
+      </button>
+    </div>
+  </div>
+))}
+    </div>
+  )}
+</div>
         </div>
       </div>
 
