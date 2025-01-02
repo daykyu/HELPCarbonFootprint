@@ -3,6 +3,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const session = require('express-session');
+const passport = require('passport');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
@@ -11,21 +13,23 @@ const activityRoutes = require('./routes/activityRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const friendRoutes = require('./routes/friendRoutes');
+const facebookRoutes = require('./routes/facebookroutes');
 
 const app = express();
-const httpServer = createServer(app); // Tambahkan ini
+const httpServer = createServer(app);
 
 // Connect to MongoDB
 connectDB();
 
 // Izinkan beberapa origin
 const allowedOrigins = [
-  'http://localhost:5173', // Vite dev server
-  'http://localhost:3000',  // Jika masih diperlukan
+  'http://localhost:5173', 
+  'http://localhost:3000',
   process.env.FRONTEND_URL
-].filter(Boolean); // Hapus nilai falsy
+].filter(Boolean); 
 
-const io = new Server(httpServer, {    // Tambahkan ini
+
+const io = new Server(httpServer, {   
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
@@ -34,7 +38,7 @@ const io = new Server(httpServer, {    // Tambahkan ini
   }
 });
 
-// Konfigurasi CORS yang lebih spesifik
+
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -54,6 +58,21 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
+
+// Inisialisasi Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 const authenticateSocket = (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
@@ -63,14 +82,14 @@ const authenticateSocket = (socket, next) => {
       return next(new Error('Authentication required'));
     }
 
-    // Verify token
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     if (decoded.userId !== userId) {
       return next(new Error('Invalid user authentication'));
     }
 
-    // Attach user data to socket
+    
     socket.user = decoded;
     socket.userId = userId;
     
@@ -84,7 +103,7 @@ const authenticateSocket = (socket, next) => {
 io.use(authenticateSocket);
 
 
-// Debug middleware
+
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   console.log('Origin:', req.get('origin'));
@@ -123,7 +142,7 @@ io.on('connection', (socket) => {
 
   // Handle user_connected event
   socket.on('user_connected', ({ userId }) => {
-    socket.join(userId); // Join user's room
+    socket.join(userId); 
     io.emit('user_online', userId);
   });
 
@@ -137,17 +156,16 @@ io.on('connection', (socket) => {
       const { to, content } = messageData;
       
       const message = {
-        id: Date.now().toString(), // Tambahkan id unik
+        id: Date.now().toString(), 
         content,
         from: socket.userId,
         to,
         timestamp: new Date().toISOString()
       };
   
-      // Emit ke pengirim dengan format yang sama
+     
       socket.emit('private_message', message);
       
-      // Emit ke penerima dengan format yang sama
       socket.to(to).emit('private_message', message);
       
       callback({ success: true, message });
@@ -197,6 +215,22 @@ app.use('/api/users', userRoutes);
 app.use('/api/activities', dashboardRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/friends', friendRoutes);
+app.use('/auth/facebook', facebookRoutes);
+
+app.get('/api/user', (req, res) => {
+  if (req.user) {
+    res.json({
+      success: true,
+      user: req.user
+    });
+  } else {
+    res.status(401).json({
+      success: false,
+      message: 'Not authenticated'
+    });
+  }
+});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
