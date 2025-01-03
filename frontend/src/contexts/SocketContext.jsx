@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import { validateMessage } from '../utils/messageValidator';
+
 
 const SocketContext = createContext();
 
@@ -13,6 +15,8 @@ export const SocketProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [socket, setSocket] = useState(null);
   const [user, setUser] = useState(null);
+  const [unreadMessages, setUnreadMessages] = useState({});
+  const [totalUnread, setTotalUnread] = useState(0);
 
   // Ambil token dari localStorage
   const getToken = useCallback(() => {
@@ -26,22 +30,37 @@ export const SocketProvider = ({ children }) => {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(window.atob(base64));
-      
-      // Pastikan struktur user sesuai dengan yang dibutuhkan
       return {
-        userId: payload._id || payload.id || payload.userId, // cek berbagai kemungkinan field id
+        userId: payload._id || payload.id || payload.userId, 
         username: payload.username || payload.name,
-        // tambahkan field lain yang diperlukan
       };
     } catch (error) {
       console.error('Error decoding token:', error);
       return null;
     }
   }, []);
+      // Tambahkan fungsi markMessageAsRead
+const markMessageAsRead = useCallback((userId) => {
+  if (!userId) return;
+  
+  setUnreadMessages(prev => {
+    const newUnread = { ...prev };
+    newUnread[userId] = 0;
+    return newUnread;
+  });
+}, []);
+
+// Tambahkan useEffect baru untuk menghitung totalUnread
+useEffect(() => {
+  const newTotal = Object.values(unreadMessages)
+    .reduce((sum, count) => sum + count, 0);
+  setTotalUnread(Math.max(0, newTotal));
+}, [unreadMessages]);
 
   // Effect untuk setup user dari token
   useEffect(() => {
     const token = getToken();
+    
     if (token) {
       const userData = decodeToken(token);
       if (userData) {
@@ -67,7 +86,7 @@ export const SocketProvider = ({ children }) => {
     const socketInstance = io(SOCKET_URL, {
       auth: {
         token,
-        userId: user.userId // Pastikan menggunakan userId yang benar dari token
+        userId: user.userId
       },
       withCredentials: true,
       transports: ['websocket'],
@@ -85,7 +104,7 @@ export const SocketProvider = ({ children }) => {
       // Emit user connected event dengan data yang benar
       socketInstance.emit('user_connected', { 
         userId: user.userId,
-        username: user.username // jika ada
+        username: user.username
       });
     });
 
@@ -117,12 +136,19 @@ export const SocketProvider = ({ children }) => {
     });
 
     socketInstance.on('private_message', (message) => {
-      console.log('Received message in socket context:', message);
+      console.log('Received message:', message);
       
       setMessages(prev => {
-        // Cek duplikasi berdasarkan id
-        if (prev.some(m => m.id === message.id)) {
-          return prev;
+        if (prev.some(m => m.id === message.id)) return prev;
+        
+        // Update unread messages jika pesan bukan dari user saat ini
+        if (message.from !== user?.userId) {
+          setUnreadMessages(prev => ({
+            ...prev,
+            [message.from]: (prev[message.from] || 0) + 1
+          }));
+          
+          setTotalUnread(prev => prev + 1);
         }
         
         return [...prev, {
@@ -174,11 +200,15 @@ export const SocketProvider = ({ children }) => {
         socketInstance.disconnect();
       }
     };
-  }, [user, getToken]); // Dependensi yang diperlukan
+  }, [user?.userId]);
 
   const sendPrivateMessage = useCallback(async (recipientId, content) => {
     if (!socket?.connected || !user?.userId) {
       throw new Error('Not connected to chat server or user not authenticated');
+    }
+    const validation = validateMessage(content);
+    if (!validation.isValid) {
+      return false;
     }
   
     const messageData = {
@@ -194,8 +224,6 @@ export const SocketProvider = ({ children }) => {
         if (response?.error) {
           reject(new Error(response.error));
         } else {
-          // Tidak perlu menambahkan ke messages di sini
-          // karena akan ditangani oleh event listener 'private_message'
           resolve(response.message);
         }
       });
@@ -227,7 +255,10 @@ export const SocketProvider = ({ children }) => {
     typingUsers,
     sendPrivateMessage,
     sendTypingIndicator,
-    user
+    user,
+    unreadMessages,
+    totalUnread,
+    markMessageAsRead
   };
 
   return (

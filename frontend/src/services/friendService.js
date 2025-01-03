@@ -13,7 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    console.log('Debug - Token being sent:', token); // Debug log
+    console.log('Debug - Token being sent:', token); 
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -45,7 +45,7 @@ export const sendFriendRequest = async (receiverEmail) => {
     return response.data;
   } catch (error) {
     if (error.response?.status === 404) {
-      throw new Error('User not found');
+      throw new Error('User with this email not found');
     }
     throw error;
   }
@@ -55,7 +55,7 @@ export const respondToFriendRequest = async (requestId, status) => {
     try {
       // Pastikan endpoint sesuai dengan backend
       const response = await api.put(`/friends/request/${requestId}`, {
-        status: status // pastikan field 'status' sesuai dengan yang diharapkan backend
+        status: status 
       });
       
       // Debug response
@@ -71,7 +71,7 @@ export const respondToFriendRequest = async (requestId, status) => {
   export const getPendingRequests = async () => {
     try {
       console.log('Making API request to get pending requests');
-      const response = await api.get('/friends/pending-requests'); // Sesuaikan dengan endpoint di backend
+      const response = await api.get('/friends/pending-requests'); 
       console.log('API response:', response);
       return response.data;
     } catch (error) {

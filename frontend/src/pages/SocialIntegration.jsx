@@ -5,6 +5,8 @@ import { sendFriendRequest, getPendingRequests, respondToFriendRequest } from '.
 import {useNotification} from '../components/NotificationContext';
 import { useSocket } from '../contexts/SocketContext';
 import { SocketProvider } from '../contexts/SocketContext';
+import { useLocation } from 'react-router-dom';
+
 
 const SocialIntegration = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +14,7 @@ const SocialIntegration = () => {
   const [showChat, setShowChat] = useState(false);
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatMessage, setChatMessage] = useState('');
-  const [notifications] = useState(1);
+  const [totalUnread, setTotalUnread] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
   const [shareNotification, setShareNotification] = useState({ show: false, message: '' });
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -23,8 +25,28 @@ const SocialIntegration = () => {
   const { socket } = useSocket();
   const [friendsList, setFriendsList] = useState([]);
   const [messages, setMessages] = useState({});
+  const [messageError, setMessageError] = useState('');
   const [isConnecting, setIsConnecting] = useState(true);
   const [socketError, setSocketError] = useState(null);
+  const [userData, setUserData] = useState(null);
+
+
+
+  const handleChatSelect = (chat) => {
+    // Tambahkan null check
+    if (!chat) {
+      setSelectedChat(null);
+      return;
+    }
+  
+    setSelectedChat(chat);
+    setFriendsList(prev => prev.map(friend => {
+      if (friend.id === chat.id) {
+        return { ...friend, unread: 0 };
+      }
+      return friend;
+    }));
+  };
 
   // connect social media state
   const [connectedAccounts, setConnectedAccounts] = useState({
@@ -56,22 +78,54 @@ const handleInstagramLogin = () => {
     window.open(`https://instagram.com/${username}`, '_blank');
   }
 };
-// Fungsi untuk handle Facebook login
-const handleFacebookLogin = () => { 
-  const username = prompt('Masukkan username Facebook Anda (tanpa @):');
-  if (username) {
-    const updatedAccounts = {
-      ...connectedAccounts,
-      facebook: {
-        username: username,
-        connectedAt: new Date().toISOString()
-      }
-    };
-    setConnectedAccounts(updatedAccounts);
-    localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
-    window.open(`https://www.facebook.com/${username}`, '_blank');
-  }
+
+const handleFacebookLogin = () => {
+  window.location.href = 'http://localhost:5000/auth/facebook';
 };
+
+useEffect(() => {
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/auth/facebook/status', {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.authenticated) {
+        console.log('User data:', data.user);
+        setUserData(data.user);
+        
+        // Update connected accounts
+        const updatedAccounts = {
+          ...connectedAccounts,
+          facebook: {
+            username: data.user.name,
+            id: data.user.id,
+            connectedAt: new Date().toISOString()
+          }
+        };
+        setConnectedAccounts(updatedAccounts);
+        localStorage.setItem('connectedSocialAccounts', JSON.stringify(updatedAccounts));
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      // Jangan set error state di sini karena ini normal ketika user belum login
+    }
+  };
+
+  checkAuthStatus();
+}, []);
+
+
 // Fungsi untuk handle LinkedIn login
 const handleLinkedInLogin = () => {
   const username = prompt('Masukkan username LinkedIn Anda (tanpa @):');
@@ -134,6 +188,12 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+  // Hitung total unread messages dari friendsList
+  const total = friendsList.reduce((sum, friend) => sum + (friend.unread || 0), 0);
+  setTotalUnread(total);
+}, [friendsList]);
+
+useEffect(() => {
   const loadPendingRequests = async () => {
     try {
       setLoading(true);
@@ -192,57 +252,45 @@ const handleRespondToRequest = async (requestId, status) => {
   }
 };
 
-
-  // Achievement data yang akan dishare
-  const achievementData = {
+  const [achievementData, setAchievementData] = useState({
     title: "Achievement Unlocked!",
     description: "Logging your first carbon emission activity",
-    date: "December 4, 2024",
+    date: new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }),
     shareUrl: window.location.href
-  };
-
-  // const chatList = [
-  //   {
-  //     id: 1,
-  //     name: 'Citra Azrill Andriana',
-  //     lastMessage: 'Hey!',
-  //     timestamp: '2 min ago',
-  //     unread: 1,
-  //     profilePic: '/src/assets/Profile.png'
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'Sri Cantik',
-  //     lastMessage: 'How are you?',
-  //     timestamp: '5 min ago',
-  //     unread: 0,
-  //     profilePic: '/src/assets/Profile4.png'
-  //   }
-  // ];
-
-  // const chatMessages = [
-  //   {
-  //     id: 1,
-  //     senderId: 1,
-  //     text: 'Hey!',
-  //     timestamp: '2 min ago'
-  //   }
-  // ];
+  });
 
   const activities = [
     {
+      id: 1,
+      title: 'Log your first carbon emission activity',
+      description: "Logging your first carbon emission activity",
+      completed: true,
+      shareEnabled: true
+    },
+    {
       title: 'Reduce your carbon footprint by 5% in a week.',
-      completed: false
+      description: "Reduced carbon footprint by 5% in a week",
+      completed: true,
+      shareEnabled: true
     },
     {
       title: 'Log your activities daily for a week.',
-      completed: false
+      description: "Logged activities daily for a week",
+      completed: true,
+      shareEnabled: true
     },
     {
       title: 'Use public transport, walk, or bike for a day.',
-      completed: false
+      description: "Used eco-friendly transportation for a day",
+      completed: false,
+      shareEnabled: false
     }
   ];
+  
 
   const socialPlatforms = [
     {
@@ -270,35 +318,35 @@ const handleRespondToRequest = async (requestId, status) => {
       name: 'Instagram', 
       color: 'bg-gradient-to-r from-purple-500 to-pink-500',
       icon: 'https://cdn-icons-png.flaticon.com/512/174/174855.png',
-      shareText: `🌟 Achievement Unlocked! 🌟\n\nI just earned an achievement for logging my first carbon emission activity!\n\nJoin me in making a difference! 🌱\n\n#Sustainability #CarbonFootprint`,
+      shareText: `🌟 Achievement Unlocked! 🌟\n\n${achievementData.description}\n\nJoin me in making a difference! 🌱\n\n#Sustainability #CarbonFootprint`,
       shareUrl: 'instagram://story-camera'
     },
     { 
       name: 'WhatsApp', 
       color: 'bg-green-500',
       icon: 'https://cdn-icons-png.flaticon.com/512/733/733585.png',
-      shareText: `🌟 Achievement Unlocked! 🌟\n\nI just earned an achievement for logging my first carbon emission activity! Check it out:`,
+      shareText: `🌟 Achievement Unlocked! 🌟\n\n${achievementData.description}\n\nJoin me in making a difference! 🌱\n\n#Sustainability #CarbonFootprint`,
       shareUrl: 'whatsapp://send'
     },
     { 
       name: 'Facebook', 
       color: 'bg-blue-600',
       icon: 'https://cdn-icons-png.flaticon.com/512/124/124010.png',
-      shareText: 'I just earned an achievement for making a positive environmental impact!',
+      shareText: `🌟 Achievement Unlocked! 🌟\n\n${achievementData.description}\n\nJoin me in making a difference! 🌱\n\n#Sustainability #CarbonFootprint`,
       shareUrl: 'https://www.facebook.com/sharer/sharer.php'
     },
     { 
       name: 'TikTok', 
       color: 'bg-black',
       icon: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png',
-      shareText: '🌟 Green Achievement Unlocked! 🌍 #Sustainability #Environment',
+      shareText: `🌟 Achievement Unlocked! 🌟\n\n${achievementData.description}\n\nJoin me in making a difference! 🌱\n\n#Sustainability #CarbonFootprint`,
       shareUrl: 'https://www.tiktok.com/upload'
     },
     { 
       name: 'Twitter', 
       color: 'bg-blue-400',
       icon: 'https://cdn-icons-png.flaticon.com/512/733/733579.png',
-      shareText: '🌟 Just unlocked a new achievement! Logged my first carbon emission activity and taking steps towards a sustainable future. Join me! 🌱 #Sustainability',
+      shareText: `🌟 Achievement Unlocked! 🌟\n\n${achievementData.description}\n\nJoin me in making a difference! 🌱\n\n#Sustainability #CarbonFootprint`,
       shareUrl: 'https://twitter.com/intent/tweet'
     }
   ];
@@ -355,10 +403,16 @@ const handleRespondToRequest = async (requestId, status) => {
       setShareNotification({ show: false, message: '' });
     }, 3000);
   };
-// Update handleSendInvite
+
 const handleSendInvite = async (e) => {
   e.preventDefault();
-  if (!email) return;
+  if (!email) {
+    setNotification({
+      type: 'error',
+      message: 'Please enter an email address'
+    });
+    return;
+  }
   
   setIsSubmitting(true);
   try {
@@ -373,105 +427,88 @@ const handleSendInvite = async (e) => {
     const updatedRequests = await getPendingRequests();
     setPendingRequests(updatedRequests.requests || []);
   } catch (error) {
+    // Mengambil pesan error dari response API
+    const errorMessage = error.response?.data?.message || error.message || 'Error sending friend request';
     setNotification({
       type: 'error',
-      message: error.message || 'Error sending friend request'
+      message: errorMessage
     });
   } finally {
     setIsSubmitting(false);
   }
 };
 
+
+
+
 useEffect(() => {
   if (!socket) return;
+
+  const handleConnect = () => {
+    setIsConnecting(false);
+    setSocketError(null);
+  };
+
+  const handleConnectError = (error) => {
+    setIsConnecting(false);
+    setSocketError('Failed to connect to chat server');
+    console.error('Socket connection error:', error);
+  };
 
   socket.on('connect', () => {
     setIsConnecting(false);
     setSocketError(null);
   });
-
-  socket.on('connect_error', (error) => {
-    setIsConnecting(false);
-    setSocketError('Failed to connect to chat server');
-    console.error('Socket connection error:', error);
-  });
+  
+  socket.on('connect', handleConnect);
+  socket.on('connect_error', handleConnectError);
 
   return () => {
-    socket.off('connect');
-    socket.off('connect_error');
+    socket.off('connect', handleConnect);
+    socket.off('connect_error', handleConnectError);
   };
-}, [socket]);
+}, [socket]); 
+
+useEffect(() => {
+  return () => {
+    // Cleanup when component unmounts
+    setSelectedChat(null);
+    setChatMessage('');
+    setShowChat(false);
+    setMessageError('');
+  };
+}, []);
 
 useEffect(() => {
   if (!socket) return;
 
-  socket.on('private message', ({ content, from, timestamp }) => {
-    // Update messages
+  const handlePrivateMessage = ({ content, from, timestamp }) => {
     setMessages(prev => ({
       ...prev,
       [from]: [...(prev[from] || []), { content, from, timestamp }]
     }));
     
-    // Update friendsList dengan pesan terakhir
     setFriendsList(prev => prev.map(friend => {
       if (friend.id === from) {
+        // Tambahkan null check untuk selectedChat
+        const isSelected = selectedChat && selectedChat.id === from;
         return {
           ...friend,
           lastMessage: content,
           timestamp: new Date(timestamp).toLocaleTimeString(),
-          unread: selectedChat?.id !== from ? (friend.unread || 0) + 1 : 0
+          unread: isSelected ? 0 : (friend.unread || 0) + 1
         };
       }
       return friend;
     }));
-  });
+  };
+
+  socket.on('private message', handlePrivateMessage);
 
   return () => {
-    socket.off('private message');
+    socket.off('private message', handlePrivateMessage);
   };
 }, [socket, selectedChat]);
-
-
-// Update handleSendMessage:
-const handleSendMessage = (e) => {
-  e.preventDefault();
-  if (!socket || !chatMessage.trim() || !selectedChat) return;
-
-  const timestamp = new Date().toISOString();
-  const messageData = {
-    content: chatMessage,
-    to: selectedChat.id,
-    from: socket.id,
-    timestamp
-  };
-
-  socket.emit('private message', messageData);
-
-  // Update messages
-  setMessages(prev => ({
-    ...prev,
-    [selectedChat.id]: [...(prev[selectedChat.id] || []), {
-      content: chatMessage,
-      from: socket.id,
-      timestamp
-    }]
-  }));
-
-  // Update friendsList dengan pesan terakhir
-  setFriendsList(prev => prev.map(friend => {
-    if (friend.id === selectedChat.id) {
-      return {
-        ...friend,
-        lastMessage: chatMessage,
-        timestamp: new Date(timestamp).toLocaleTimeString()
-      };
-    }
-    return friend;
-  }));
-
-  setChatMessage('');
-};
-
 
   const AchievementModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="achievement-modal">
@@ -566,47 +603,55 @@ const handleSendMessage = (e) => {
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
         <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-gray-50 to-white">
           <h2 className="text-xl font-bold text-gray-900">Achievements</h2>
-          <button 
-            onClick={() => setShowAchievement(true)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            data-testid="share-achievement"
-          >
-            <Share2 className="h-5 w-5 text-gray-600" />
-          </button>
         </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg 
-                          border border-green-100 shadow-sm hover:shadow-md transition-all"
-                 data-testid="first-achievement">
-              <div className="flex items-center space-x-3">
-                <span className="text-gray-900 font-medium">
-                  Log your first carbon emission activity
-                </span>
-                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
-                  <Check className="h-4 w-4 text-white" />
+            <div className="p-6">
+            <div className="space-y-4">
+              {activities.map((activity, index) => (
+                <div 
+                  key={index} 
+                  className={`flex items-center justify-between p-3 
+                    ${activity.completed ? 'bg-green-50 border-green-100' : 'bg-white border-gray-100'} 
+                    rounded-lg border shadow-sm hover:shadow-md transition-all`}
+                  data-testid={`activity-${index}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className={`${activity.completed ? 'text-gray-900' : 'text-gray-600'} font-medium`}>
+                      {activity.title}
+                    </span>
+                    {activity.completed && (
+                      <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
+                        <Check className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {activity.completed && activity.shareEnabled && (
+                    <button 
+                      onClick={() => {
+                        setShowAchievement(true);
+                        // Update achievement data sesuai dengan activity yang dipilih
+                        setAchievementData({
+                          title: "Achievement Unlocked!",
+                          description: activity.description,
+                          date: new Date().toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          }),
+                          shareUrl: window.location.href
+                        });
+                      }}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      data-testid={`share-achievement-${index}`}
+                    >
+                      <Share2 className="h-5 w-5 text-gray-600" />
+                    </button>
+                  )}
                 </div>
-              </div>
-              <Download 
-                className="h-5 w-5 text-gray-600 hover:text-gray-900 cursor-pointer"
-                data-testid="download-first-achievement"
-              />
+              ))}
             </div>
-
-            {activities.map((activity, index) => (
-              <div 
-                key={index} 
-                className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg
-                          border border-gray-100 shadow-sm hover:shadow-md transition-all"
-                data-testid={`activity-${index}`}
-              >
-                <span className="text-gray-600">{activity.title}</span>
-              </div>
-            ))}
           </div>
-        </div>
-      </div>
-
+                    </div>
       {/* Add Friends Section */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
         <div className="p-6 border-b bg-gradient-to-r from-gray-50 to-white">
@@ -740,15 +785,19 @@ const handleSendMessage = (e) => {
     <SocketProvider>
 <ChatWindow 
   showChat={showChat}
-  setShowChat={setShowChat}
+  setShowChat={(show) => {
+    setShowChat(show);
+    if (!show) {
+      setSelectedChat(null);
+      setMessageError('');
+    }
+  }}
   selectedChat={selectedChat}
-  setSelectedChat={setSelectedChat}
-  chatList={friendsList} // Gunakan friendsList sebagai gantinya
-  chatMessages={messages[selectedChat?.id] || []}
-  chatMessage={chatMessage}
-  setChatMessage={setChatMessage}
-  notifications={notifications}
-  handleSendMessage={handleSendMessage}
+  setSelectedChat={handleChatSelect}
+  chatList={friendsList}
+  notifications={totalUnread} 
+  messageError={messageError}
+  setMessageError={setMessageError}
 />
 
       </SocketProvider>

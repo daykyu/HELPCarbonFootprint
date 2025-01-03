@@ -104,7 +104,7 @@ exports.getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User with this email not found'
       });
     }
 
@@ -137,7 +137,7 @@ exports.updateProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User with this email not found'
       });
     }
 
