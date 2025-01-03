@@ -71,7 +71,7 @@ const ChatWindow = ({
             </button>
             <div className="flex items-center space-x-3">
               <img 
-                src={selectedChat.profilePic} 
+                src="../public/user-286.svg"
                 alt={selectedChat.name}
                 className="w-8 h-8 rounded-full object-cover"
                 loading="lazy"
@@ -120,7 +120,7 @@ const ChatWindow = ({
     >
       <div className="relative">
         <img 
-          src={chat.profilePic}
+          src="../public/user-286.svg" 
           alt={chat.name}
           className="w-12 h-12 rounded-full object-cover"
           loading="lazy"
