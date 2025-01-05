@@ -20,12 +20,16 @@ import EditContent from './pages/admin/EditContent';
 import AdminSettings from './pages/admin/AdminSettings';
 import ContentDetail from './components/ContentDetail';
 
+import { NotificationProvider } from './components/NotificationContext';
+import { SocketProvider } from './contexts/SocketContext';
 
 function App() {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('userRole');
 
   return (
+    <NotificationProvider>
+      <SocketProvider>
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
@@ -61,6 +65,7 @@ function App() {
         <Route path="daily-log" element={<DailyActivityLog />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="recommendations" element={<Recommendations />} />
+        
         <Route path="social" element={<SocialIntegration />} />
         <Route path="history" element={<HistoricalTracking />} />
         <Route path="/learn" element={<Learn />} />
@@ -73,6 +78,9 @@ function App() {
               : <Navigate to="/daily-log" replace />
           } 
         />
+        
+        {/* Redirect ke daily-log setelah login */}
+        <Route index element={<Navigate to="/daily-log" replace />} />
       </Route>
 
       {/* Default redirect */}
@@ -89,6 +97,8 @@ function App() {
         }
       />
     </Routes>
+    </SocketProvider>
+    </NotificationProvider>
   );
 }
 

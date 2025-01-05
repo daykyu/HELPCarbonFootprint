@@ -22,7 +22,9 @@
     "react-slick": "^0.30.2",
     "react-wavify": "^1.11.1",
     "recharts": "^2.14.1",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "socket.io-client": "^4.8.1",
+    "tailwind-scrollbar": "^3.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

@@ -62,7 +62,28 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  favorites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Content'
+  }],
+  friends: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 });
+
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.methods.isFriendWith = function(userId) {
+  return this.friends && this.friends.includes(userId);
+};
+
+userSchema.methods.addFriend = function(friendId) {
+  if (!this.friends) this.friends = [];
+  if (!this.friends.includes(friendId)) {
+    this.friends.push(friendId);
+  }
+  return this.save();
+};
 
 module.exports = mongoose.model('User', userSchema);

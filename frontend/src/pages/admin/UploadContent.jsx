@@ -54,34 +54,34 @@ const UploadContent = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.file || !formData.thumbnail) {
-      alert('Please select both content file and thumbnail');
-      return;
-    }
+ // Di UploadContent.jsx, update handleSubmit:
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  try {
+    const token = localStorage.getItem('token');
+    const form = new FormData();
+    form.append('title', formData.title);
+    form.append('category', formData.category);
+    form.append('description', formData.description);
+    form.append('file', formData.file);
+    form.append('thumbnail', formData.thumbnail);
 
-    try {
-      const token = localStorage.getItem('token');
-      const form = new FormData();
-      form.append('title', formData.title);
-      form.append('category', formData.category);
-      form.append('description', formData.description);
-      form.append('file', formData.file);
-      form.append('thumbnail', formData.thumbnail);
+    const response = await axios.post('http://localhost:5000/api/content', form, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
 
-      await axios.post('http://localhost:5000/api/content', form, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
+    if (response.data.success) {
       setShowSuccessModal(true);
-    } catch (error) {
-      alert(error.response?.data?.message || 'Error uploading content');
     }
-  };
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert(error.response?.data?.message || 'Error uploading content');
+  }
+};
+
 
   const SuccessModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="success-modal">
