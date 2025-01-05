@@ -34,29 +34,56 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/users/admin/dashboard', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+  // src/pages/AdminDashboard.jsx
+const fetchDashboardData = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    console.log('Token being sent:', token);
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
 
-      if (response.data.success) {
-        setStats(response.data.data);
+    // Sesuaikan dengan route yang ada
+    const response = await axios.get('http://localhost:5000/api/users/admin/dashboard', {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        content: 'Failed to fetch dashboard data'
-      });
+    });
 
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userRole');
-        navigate('/login');
+    if (response.data.success) {
+      setStats(response.data.data);
+    }
+  } catch (error) {
+    console.error('Full error:', error.response?.data);
+    console.error('Dashboard error:', error);
+    
+    let errorMessage = 'Failed to fetch dashboard data';
+    
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          errorMessage = 'Session expired. Please login again.';
+          localStorage.removeItem('token');
+          localStorage.removeItem('userRole');
+          navigate('/login');
+          break;
+        case 403:
+          errorMessage = 'Access denied. Admin privileges required.';
+          navigate('/login');
+          break;
+        default:
+          errorMessage = error.response.data.message || errorMessage;
       }
     }
-  };
+
+    setMessage({
+      type: 'error',
+      content: errorMessage
+    });
+  }
+};
+
 
   const MetricCard = ({ title, value, icon: Icon, trend, trendValue, onClick, isSelected }) => (
     <div 

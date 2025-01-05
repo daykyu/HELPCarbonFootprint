@@ -17,6 +17,11 @@ const Learn = () => {
   const fetchContent = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+  
       const response = await axios.get('http://localhost:5000/api/content/public', {
         headers: { Authorization: `Bearer ${token}` },
         params: {
@@ -24,7 +29,7 @@ const Learn = () => {
           search: searchQuery
         }
       });
-
+  
       if (response.data.success) {
         const allContent = response.data.data;
         setContent(prev => ({
@@ -32,13 +37,16 @@ const Learn = () => {
           featured: allContent.filter(item => item.featured),
           recent: allContent.filter(item => !item.featured)
         }));
+      } else {
+        console.error('API returned error:', response.data.message);
       }
     } catch (error) {
-      console.error('Error fetching content:', error);
+      console.error('Error fetching content:', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const fetchFavoriteContent = async () => {
     if (activeCategory !== 'all') return;

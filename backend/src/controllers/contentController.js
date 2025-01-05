@@ -89,22 +89,46 @@ exports.getContent = async (req, res) => {
 // Upload new content
 exports.uploadContent = async (req, res) => {
   try {
-    const { title, category, description, featured = false } = req.body;
-    const contentFile = req.files.file[0];
-    const thumbnailFile = req.files.thumbnail[0];
+    // Debug logging
+    console.log('Upload request received');
+    console.log('Headers:', req.headers);
+    console.log('User ID:', req.userId);
+    console.log('Body:', req.body);
+    console.log('Files:', req.files);
 
-    if (!contentFile || !thumbnailFile) {
+    // Validasi file
+    if (!req.files?.file?.[0] || !req.files?.thumbnail?.[0]) {
       return res.status(400).json({
         success: false,
-        message: 'Please upload both content file and thumbnail'
+        message: 'Both content file and thumbnail are required'
       });
     }
 
-    const content = await Content.create({
-      title,
+    // Validasi input
+    const { title, category, description } = req.body;
+    if (!title || !category || !description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Validasi userId
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User ID not found in request'
+      });
+    }
+
+    const contentFile = req.files.file[0];
+    const thumbnailFile = req.files.thumbnail[0];
+
+    // Create content
+    const content = new Content({
+      title: title.trim(),
       category,
-      description,
-      featured: featured === 'true',
+      description: description.trim(),
       fileUrl: `/uploads/educational-content/${contentFile.filename}`,
       thumbnailUrl: `/uploads/thumbnails/${thumbnailFile.filename}`,
       fileName: contentFile.originalname,
@@ -114,25 +138,45 @@ exports.uploadContent = async (req, res) => {
       status: 'published'
     });
 
+    await content.save();
+
     res.status(201).json({
       success: true,
       data: content
     });
+
   } catch (error) {
-    // Clean up uploaded files if database operation fails
-    if (req.files?.file) {
-      await fs.unlink(req.files.file[0].path).catch(console.error);
+    console.error('Upload error details:', error);
+
+    // Cleanup files jika terjadi error
+    if (req.files) {
+      try {
+        const filesToDelete = [
+          req.files.file?.[0]?.path,
+          req.files.thumbnail?.[0]?.path
+        ].filter(Boolean);
+
+        await Promise.all(
+          filesToDelete.map(filePath =>
+            fs.unlink(filePath).catch(err => 
+              console.error(`Failed to delete ${filePath}:`, err)
+            )
+          )
+        );
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+      }
     }
-    if (req.files?.thumbnail) {
-      await fs.unlink(req.files.thumbnail[0].path).catch(console.error);
-    }
-    
+
     res.status(500).json({
       success: false,
-      message: error.message
+      message: 'Error uploading content',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
+
+
 
 // Update existing content
 exports.updateContent = async (req, res) => {
