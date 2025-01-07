@@ -30,6 +30,7 @@ const HistoricalTracking = () => {
     fetchHistoricalData();
   }, [timeRange]);
 
+  // to able load data 
   const fetchHistoricalData = async () => {
     setLoading(true);
     try {
@@ -195,6 +196,7 @@ const HistoricalTracking = () => {
       ) : (
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
           <p className="text-blue-700">
+            //pop up message only can be view if data is not entered yet
             No historical data available. Start tracking your activities to see your progress!
           </p>
         </div>
