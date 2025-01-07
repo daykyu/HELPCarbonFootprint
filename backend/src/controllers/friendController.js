@@ -105,65 +105,152 @@ exports.sendFriendRequest = async (req, res) => {
 };
 
 // Update respondToFriendRequest untuk menangani array friends
+// exports.respondToFriendRequest = async (req, res) => {
+//     console.log('Request received:', {
+//         params: req.params,
+//         body: req.body,
+//         headers: req.headers
+//       });
+//     try {
+//       const { requestId } = req.params; // Ambil dari URL params
+//       const { status } = req.body;
+//       const userId = req.userId;
+
+//       console.log('Debug info:', {
+//         requestId,
+//         status,
+//         userId
+//       });
+  
+//       if (!['accepted', 'rejected'].includes(status)) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Invalid status value'
+//         });
+//       }
+  
+//       const friendRequest = await FriendRequest.findById(requestId);
+//       if (!friendRequest) {
+//         return res.status(404).json({
+//           success: false,
+//           message: 'Friend request not found'
+//         });
+//       }
+  
+//       // Verifikasi bahwa user adalah receiver dari request
+//       if (friendRequest.receiver.toString() !== userId) {
+//         return res.status(403).json({
+//           success: false,
+//           message: 'Not authorized to respond to this request'
+//         });
+//       }
+  
+//       friendRequest.status = status;
+//       await friendRequest.save();
+  
+//       if (status === 'accepted') {
+//         // Update friends array untuk kedua user
+//         await User.findByIdAndUpdate(friendRequest.sender, {
+//           $addToSet: { friends: friendRequest.receiver }
+//         });
+//         await User.findByIdAndUpdate(friendRequest.receiver, {
+//           $addToSet: { friends: friendRequest.sender }
+//         });
+//       }
+  
+//       res.json({
+//         success: true,
+//         message: `Friend request ${status} successfully`
+//       });
+//     } catch (error) {
+//       console.error('Error in respondToFriendRequest:', error);
+//       res.status(500).json({
+//         success: false,
+//         message: error.message || 'Internal server error'
+//       });
+//     }
+//   };
+
+// controllers/friendController.js
+// controllers/friendController.js
 exports.respondToFriendRequest = async (req, res) => {
-    console.log('Request received:', {
-        params: req.params,
-        body: req.body,
-        headers: req.headers
-      });
-    try {
-      const { requestId } = req.params; // Ambil dari URL params
-      const { status } = req.body;
-      const userId = req.userId;
-  
-      if (!['accepted', 'rejected'].includes(status)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid status value'
-        });
-      }
-  
-      const friendRequest = await FriendRequest.findById(requestId);
-      if (!friendRequest) {
-        return res.status(404).json({
-          success: false,
-          message: 'Friend request not found'
-        });
-      }
-  
-      // Verifikasi bahwa user adalah receiver dari request
-      if (friendRequest.receiver.toString() !== userId) {
-        return res.status(403).json({
-          success: false,
-          message: 'Not authorized to respond to this request'
-        });
-      }
-  
-      friendRequest.status = status;
-      await friendRequest.save();
-  
-      if (status === 'accepted') {
-        // Update friends array untuk kedua user
-        await User.findByIdAndUpdate(friendRequest.sender, {
-          $addToSet: { friends: friendRequest.receiver }
-        });
-        await User.findByIdAndUpdate(friendRequest.receiver, {
-          $addToSet: { friends: friendRequest.sender }
-        });
-      }
-  
-      res.json({
-        success: true,
-        message: `Friend request ${status} successfully`
-      });
-    } catch (error) {
-      console.error('Error in respondToFriendRequest:', error);
-      res.status(500).json({
+  try {
+    const { requestId } = req.params;
+    const { status } = req.body;
+    const userId = req.userId;
+
+    console.log('Processing request with:', {
+      requestId,
+      status,
+      userId
+    });
+
+    const friendRequest = await FriendRequest.findById(requestId);
+    
+    if (!friendRequest) {
+      return res.status(404).json({
         success: false,
-        message: error.message || 'Internal server error'
+        message: 'Friend request not found'
       });
     }
-  };
+
+    // Convert ObjectId to string for comparison
+    const receiverId = friendRequest.receiver.toString();
+    const requestUserId = userId.toString();
+
+    console.log('Comparing IDs:', {
+      receiverId,
+      requestUserId,
+      isEqual: receiverId === requestUserId
+    });
+
+    // Strict equality comparison of strings
+    if (receiverId !== requestUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to respond to this request',
+        debug: {
+          receiverId,
+          userId: requestUserId
+        }
+      });
+    }
+
+    // Update request status
+    friendRequest.status = status;
+    await friendRequest.save();
+
+    if (status === 'accepted') {
+      // Ensure both users have friends array
+      await User.updateOne(
+        { _id: friendRequest.sender },
+        { $addToSet: { friends: friendRequest.receiver } }
+      );
+      
+      await User.updateOne(
+        { _id: friendRequest.receiver },
+        { $addToSet: { friends: friendRequest.sender } }
+      );
+
+      console.log('Friends lists updated successfully');
+    }
+
+    res.json({
+      success: true,
+      message: `Friend request ${status} successfully`
+    });
+
+  } catch (error) {
+    console.error('Error in respondToFriendRequest:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Internal server error'
+    });
+  }
+};
+
+
+
 
 exports.getPendingRequests = async (req, res) => {
     try {

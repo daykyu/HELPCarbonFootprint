@@ -4,6 +4,7 @@ const User = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
+    console.log('Headers received:', req.headers);
     const authHeader = req.header('Authorization');
     console.log('Auth Header:', authHeader); // Untuk debugging
 
@@ -28,9 +29,14 @@ const auth = async (req, res, next) => {
       });
     }
 
+    // req.user = user;
+    // req.userId = user._id;
+    // req.token = token;
+
+    req.userId = user._id.toString();
     req.user = user;
-    req.userId = user._id;
     req.token = token;
+
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

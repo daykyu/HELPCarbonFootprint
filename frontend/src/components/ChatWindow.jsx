@@ -197,7 +197,7 @@ const ChatWindow = ({
     const validation = validateMessage(chatMessage.trim());
     
     if (!validation.isValid) {
-      setMessageError(`Pesan mengandung kata tidak pantas: "${validation.invalidWords.join(', ')}". Silakan perbaiki dan kirim lagi.`);
+      setMessageError(`Text contains inappropriate word: "${validation.invalidWords.join(', ')}". Please revised and send again.`);
       return;
     }
   

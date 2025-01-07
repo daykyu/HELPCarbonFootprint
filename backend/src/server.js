@@ -34,6 +34,7 @@ const httpServer = createServer(app);
 const allowedOrigins = [
   'http://localhost:5173', 
   'http://localhost:3000',
+  'http://localhost:5000',
   process.env.FRONTEND_URL,
   process.env.REACT_APP_API_URL
 ].filter(Boolean);
@@ -42,7 +43,7 @@ const allowedOrigins = [
 const io = new Server(httpServer, {   
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST","PUT"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
   },

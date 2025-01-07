@@ -6,6 +6,8 @@ import {useNotification} from '../components/NotificationContext';
 import { useSocket } from '../contexts/SocketContext';
 import { SocketProvider } from '../contexts/SocketContext';
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+
 
 
 const SocialIntegration = () => {
@@ -29,8 +31,6 @@ const SocialIntegration = () => {
   const [isConnecting, setIsConnecting] = useState(true);
   const [socketError, setSocketError] = useState(null);
   const [userData, setUserData] = useState(null);
-
-
 
   const handleChatSelect = (chat) => {
     // Tambahkan null check
@@ -214,43 +214,117 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, []);
 
+// const handleRespondToRequest = async (requestId, status) => {
+//   try {
+//     const response = await fetch(`/api/friends/request/${requestId}`, {
+//       method: 'PUT',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({ status })
+      
+//     });
+
+//     const data = await response.json();
+    
+//     if (!response.ok) {
+//       throw new Error(data.message);
+//     }
+
+//     // Refresh friend requests
+//     const updatedRequests = await getPendingRequests();
+//     setPendingRequests(updatedRequests.requests || []);
+    
+//     // Refresh friends list jika request diterima
+//     if (status === 'accepted') {
+//       getFriendsList();
+//     }
+    
+//     setNotification({
+//       type: 'success',
+//       message: data.message || `Friend request ${status} successfully`
+//     });
+//   } catch (error) {
+//     setNotification({
+//       type: 'error',
+//       message: error.message || `Failed to ${status} friend request`
+//     });
+//   }
+// };
+
+axios.defaults.baseURL = 'http://localhost:5000';
+
 const handleRespondToRequest = async (requestId, status) => {
   try {
-    const response = await fetch(`/api/friends/request/${requestId}`, {
-      method: 'PUT',
+    const token = localStorage.getItem('token');
+    console.log('Token being sent:', token); // Debug token
+
+    if (!token) {
+      setNotification({
+        type: 'error',
+        message: 'Authentication token not found'
+      });
+      return;
+    }
+
+    // Tambahkan log untuk request
+    console.log('Request details:', {
+      requestId,
+      status,
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ status })
+        'Authorization': `Bearer ${token}`
+      }
     });
 
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message);
-    }
+    const response = await axios.put(
+      `/api/friends/request/${requestId}`,
+      { status },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-    // Refresh friend requests
-    const updatedRequests = await getPendingRequests();
-    setPendingRequests(updatedRequests.requests || []);
-    
-    // Refresh friends list jika request diterima
-    if (status === 'accepted') {
-      getFriendsList();
+    // Log response
+    console.log('Response:', response);
+
+    if (response.data.success) {
+      // Refresh friend requests
+      const updatedRequests = await getPendingRequests();
+      setPendingRequests(updatedRequests.requests || []);
+      
+      // Refresh friends list jika request diterima
+      if (status === 'accepted') {
+        await getFriendsList();
+      }
+
+      setNotification({
+        type: 'success',
+        message: response.data.message || `Friend request ${status} successfully`
+      });
+    } else {
+      throw new Error(response.data.message || `Failed to ${status} friend request`);
     }
-    
-    setNotification({
-      type: 'success',
-      message: data.message || `Friend request ${status} successfully`
-    });
   } catch (error) {
+    console.error('Full error object:', error);
+    console.error('Response data:', error.response?.data);
+    
+    const errorMessage = error.response?.data?.message 
+      || error.message 
+      || `Failed to ${status} friend request`;
+    
     setNotification({
       type: 'error',
-      message: error.message || `Failed to ${status} friend request`
+      message: errorMessage
     });
   }
 };
+
+
+
 
   const [achievementData, setAchievementData] = useState({
     title: "Achievement Unlocked!",
